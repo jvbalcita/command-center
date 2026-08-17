@@ -151,3 +151,10 @@ Use the **ui-ux-pro-max** skill for all UI/UX decisions. The persisted design sy
 - **shadcn/ui now uses Base UI** (`@base-ui/react/*`), not Radix. Use `render={<Button />}` on triggers instead of `asChild`; `DialogTrigger` accepts `className`/`aria-*` directly.
 - **Icons = HugeIcons**: renderer `@hugeicons/react` (`HugeiconsIcon`) + icon set `@hugeicons/core-free-icons` (named `XxxIcon` exports). Usage: `<HugeiconsIcon icon={Rocket02Icon} size={18} strokeWidth={1.8} />`. Do NOT use Lucide.
 - **Forms**: client `handleSubmit(formData)` + `useTransition` calling a server action (avoids the `react-hooks/set-state-in-effect` lint error). Server actions return `ActionState` (`{ ok, error? }`).
+
+## UI shell (2026-08-18)
+
+- **Responsive app shell = shadcn Sidebar block**: `SidebarProvider` + `<Sidebar collapsible="icon">` + `SidebarInset` + `SidebarTrigger`. Desktop collapses to icons; mobile auto-renders as a `Sheet` drawer. Wrap app in `TooltipProvider` (needed for sidebar tooltips).
+- **`use-mobile`** hook uses `useSyncExternalStore` (not `useEffect`+`setState` — that trips `react-hooks/set-state-in-effect`).
+- **All lucide defaults replaced with HugeIcons** (dialog/sheet close `Cancel01Icon`, sidebar trigger `Menu01Icon`, dropdown `ArrowRight01Icon`/`Tick01Icon`).
+- `SidebarMenuButton` uses `render={<Link href="..." />}` (Base UI) + `tooltip` prop, not `asChild`.
