@@ -81,9 +81,9 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] `.env.example` written (`HABITICA_USER_ID`, `HABITICA_API_TOKEN`, `JARVIS_API_KEY`)
 
 ### Phase 2 — Data layer
-- [ ] Drizzle schema (projects, tasks, sync_log, activity, settings)
-- [ ] Migrations + seed script
-- [ ] Repos/queries for tasks & projects
+- [x] Drizzle schema (projects, tasks, sync_log, activity, settings)
+- [x] Migrations + seed script (`drizzle/0000_*.sql` + `tsx` seed)
+- [x] Repos/queries for tasks & projects
 
 ### Phase 3 — Habitica client
 - [ ] `src/lib/habitica.ts` — typed client (create task, complete, score, get user stats)
