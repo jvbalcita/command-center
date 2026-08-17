@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
-import { updateTaskAction } from "@/lib/actions";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { deleteTaskAction, updateTaskAction } from "@/lib/actions";
 import type { Project, Task } from "@/lib/db/schema";
 import { toDateInputValue } from "@/lib/task-utils";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { TaskFormFields } from "./task-form-fields";
 
-export function EditTaskDialog({ task, projects }: { task: Task; projects: Project[] }) {
-  const [open, setOpen] = useState(false);
+export function EditTaskDialog({
+  task,
+  projects,
+  open,
+  onOpenChange,
+}: {
+  task: Task;
+  projects: Project[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const updateAction = updateTaskAction.bind(null, task.id);
@@ -27,20 +35,20 @@ export function EditTaskDialog({ task, projects }: { task: Task; projects: Proje
     setError(null);
     startTransition(async () => {
       const result = await updateAction(formData);
-      if (result.ok) setOpen(false);
+      if (result.ok) onOpenChange(false);
       else setError(result.error ?? "Something went wrong");
     });
   }
 
+  function handleDelete() {
+    startTransition(async () => {
+      await deleteTaskAction(task.id);
+      onOpenChange(false);
+    });
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        type="button"
-        aria-label="Edit task"
-        className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <HugeiconsIcon icon={PencilEdit01Icon} size={17} strokeWidth={1.7} />
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit task</DialogTitle>
@@ -58,9 +66,20 @@ export function EditTaskDialog({ task, projects }: { task: Task; projects: Proje
           />
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <DialogFooter>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving…" : "Save changes"}
-            </Button>
+            <div className="flex w-full items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={1.7} />
+                Delete
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -6,6 +6,14 @@ import { NewTaskButton } from "./_components/new-task-button";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default async function Home({
   searchParams,
@@ -43,20 +51,28 @@ export default async function Home({
     <SidebarProvider>
       <AppSidebar active={active} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold tracking-tight">{heading}</h1>
-              <p className="text-xs text-muted-foreground">
-                {openCount} open {openCount === 1 ? "task" : "tasks"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
-            </div>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/">Mission Control</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{heading}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+          <div className="ml-auto flex items-center gap-2 px-4">
+            <span className="hidden text-xs text-muted-foreground sm:block">
+              {openCount} open
+            </span>
+            <ThemeToggle />
+            <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-hidden">

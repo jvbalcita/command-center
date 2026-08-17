@@ -143,3 +143,13 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - Each checkbox above = one task; tick `[x]` when done.
 - Jarvis updates this file + a daily `memory/YYYY-MM-DD.md` note at the end of each working session.
 - Milestones M1–M6 gate progress; anything blocked gets logged under §8.
+
+---
+
+## Recent work (2026-08-18) — design system + kanban
+
+- [x] Fonts: **Space Grotesk** (headings) + **Oxanium** (body/UI) via `next/font/google`
+- [x] Theme: **teal** primary + **orange** accent on neutral "Mist" base — full **dark mode** with `next-themes` toggle
+- [x] Sidebar: `sidebar-07` collapsible shell (HugeIcons, teal)
+- [x] Kanban board: **Todo → In Progress → Done**, drag-to-move status (`@dnd-kit`), `moveTaskAction` + `setTaskStatus`
+- [ ] Apply **Rhea** style (currently `base-nova`) — deferred; needs clean re-init to avoid clobbering HugeIcons swap

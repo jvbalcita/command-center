@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { createProjectAction } from "@/lib/actions";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,9 +35,13 @@ export function NewProjectButton() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" className="w-full gap-1.5" />}>
-        <HugeiconsIcon icon={Add01Icon} size={17} strokeWidth={1.8} />
-        New project
+      <DialogTrigger
+        render={
+          <SidebarMenuButton tooltip="New project" className="text-sidebar-foreground/70" />
+        }
+      >
+        <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={1.7} />
+        <span>New project</span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

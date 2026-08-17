@@ -1,18 +1,15 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Calendar03Icon,
-  Delete02Icon,
-  DragDropVerticalIcon,
   Flag01Icon,
   Flag02Icon,
   Flag03Icon,
 } from "@hugeicons/core-free-icons";
-import { deleteTaskAction } from "@/lib/actions";
 import { PRIORITY_META, formatDueDate, type Priority } from "@/lib/task-utils";
 import type { Project, Task } from "@/lib/db/schema";
 import { EditTaskDialog } from "./edit-task-dialog";
@@ -24,10 +21,22 @@ const PRIORITY_ICON = {
 } as const;
 
 export function KanbanCard({ task, projects }: { task: Task; projects: Project[] }) {
-  const [isPending, startTransition] = useTransition();
+  const [editOpen, setEditOpen] = useState(false);
+  const draggingRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
+
+  useEffect(() => {
+    if (isDragging) {
+      draggingRef.current = true;
+      return;
+    }
+    const id = setTimeout(() => {
+      draggingRef.current = false;
+    }, 120);
+    return () => clearTimeout(id);
+  }, [isDragging]);
 
   const due = formatDueDate(task.dueDate);
   const priority = (task.priority ?? "medium") as Priority;
@@ -37,25 +46,23 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
 
   const style = transform ? { transform: CSS.Transform.toString(transform) } : undefined;
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className={`group flex items-start gap-2 rounded-xl border border-border bg-card px-3 py-3 shadow-sm transition-shadow ${
-        isDragging ? "z-10 opacity-60 shadow-lg ring-2 ring-primary/30" : ""
-      } ${isPending ? "opacity-60" : ""}`}
-    >
-      <button
-        type="button"
-        aria-label="Drag to move"
-        {...listeners}
-        className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground/50 transition-colors hover:text-muted-foreground active:cursor-grabbing"
-      >
-        <HugeiconsIcon icon={DragDropVerticalIcon} size={16} strokeWidth={1.8} />
-      </button>
+  function handleClick() {
+    if (draggingRef.current) return;
+    setEditOpen(true);
+  }
 
-      <div className="min-w-0 flex-1">
+  return (
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        onClick={handleClick}
+        className={`group cursor-grab select-none rounded-xl border border-border bg-card px-3 py-3 shadow-sm transition-shadow active:cursor-grabbing ${
+          isDragging ? "z-10 opacity-60 shadow-lg ring-2 ring-primary/30" : ""
+        }`}
+      >
         <p
           className={`text-sm font-medium leading-snug ${
             task.status === "done" ? "text-muted-foreground line-through" : "text-foreground"
@@ -92,18 +99,12 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
           ) : null}
         </div>
       </div>
-
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-        <EditTaskDialog task={task} projects={projects} />
-        <button
-          type="button"
-          aria-label="Delete task"
-          onClick={() => startTransition(() => deleteTaskAction(task.id))}
-          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
-        >
-          <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={1.7} />
-        </button>
-      </div>
-    </div>
+      <EditTaskDialog
+        task={task}
+        projects={projects}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+    </>
   );
 }

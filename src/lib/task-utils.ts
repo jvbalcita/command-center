@@ -26,6 +26,10 @@ export const PRIORITY_META: Record<
 };
 
 const DAY_MS = 86_400_000;
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 export function formatDueDate(ms: Date | number | null): {
   label: string;
@@ -33,19 +37,15 @@ export function formatDueDate(ms: Date | number | null): {
 } {
   if (!ms) return { label: "", tone: "none" };
   const due = new Date(ms);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(due);
-  d.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - today.getTime()) / DAY_MS);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dueStart = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+  const diffDays = Math.round((dueStart - todayStart) / DAY_MS);
 
   if (diffDays < 0) return { label: "Overdue", tone: "overdue" };
   if (diffDays === 0) return { label: "Today", tone: "soon" };
   if (diffDays === 1) return { label: "Tomorrow", tone: "soon" };
-  return {
-    label: due.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    tone: "muted",
-  };
+  return { label: `${MONTHS_SHORT[due.getMonth()]} ${due.getDate()}`, tone: "muted" };
 }
 
 export function toDateInputValue(ms: Date | number | null): string {
