@@ -8,7 +8,6 @@ import { DashboardStats } from "./_components/dashboard-stats";
 import { ActivityFeed } from "./_components/activity-feed";
 import { CommandBar } from "./_components/command-bar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -57,7 +56,7 @@ export default async function Home({
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            <div aria-hidden className="mr-2 h-4 w-px shrink-0 bg-border" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
