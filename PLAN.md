@@ -74,11 +74,11 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [ ] Confirm Habitica credentials availability
 
 ### Phase 1 — Scaffold & tooling
-- [ ] `create-next-app` (TS, Tailwind, ESLint, App Router, src-dir, `@/*`)
-- [ ] `git init` + `.gitignore` + initial commit
-- [ ] shadcn/ui init
-- [ ] Drizzle ORM + SQLite (`drizzle-orm`, `better-sqlite3`) + first migration
-- [ ] `.env.example` + env validation (`HABITICA_USER_ID`, `HABITICA_API_TOKEN`, `JARVIS_API_KEY`)
+- [x] `create-next-app` (installed Next.js 16.3.1) (TS, Tailwind, ESLint, App Router, src-dir, `@/*`)
+- [x] `git init` + `.gitignore` + initial commit
+- [x] shadcn/ui init
+- [x] Drizzle ORM + SQLite deps installed (`drizzle-orm`, `better-sqlite3`, `drizzle-kit`)
+- [x] `.env.example` written (`HABITICA_USER_ID`, `HABITICA_API_TOKEN`, `JARVIS_API_KEY`)
 
 ### Phase 2 — Data layer
 - [ ] Drizzle schema (projects, tasks, sync_log, activity, settings)
