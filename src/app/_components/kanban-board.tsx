@@ -52,6 +52,7 @@ export function KanbanBoard({ tasks, projects }: { tasks: Task[]; projects: Proj
 
   return (
     <DndContext
+      id="kanban-board"
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
