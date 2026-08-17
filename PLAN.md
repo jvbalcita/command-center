@@ -153,3 +153,9 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] Sidebar: `sidebar-07` collapsible shell (HugeIcons, teal)
 - [x] Kanban board: **Todo → In Progress → Done**, drag-to-move status (`@dnd-kit`), `moveTaskAction` + `setTaskStatus`
 - [ ] Apply **Rhea** style (currently `base-nova`) — deferred; needs clean re-init to avoid clobbering HugeIcons swap
+
+## Recent work (2026-08-18, Phase 5)
+- Fixed kanban drag bug: removed transform on dragged card (ghost at 40% opacity) + fixed-width DragOverlay.
+- Wired shadcn components into task form: `Select` (priority, project) + `Popover`/`Calendar` date picker (with Clear). Swapped all lucide → HugeIcons in select.tsx/calendar.tsx.
+- Added `logActivity` + `listActivity` to queries; all server actions now log to `activity`.
+- Added `DashboardStats` (Total/Open/In progress/Due today/Overdue), `ActivityFeed` (right panel), `CommandBar` (Cmd+K quick-add).
