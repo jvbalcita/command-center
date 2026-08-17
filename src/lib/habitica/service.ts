@@ -1,13 +1,15 @@
 import { getTask, listTasks, logSync, setTaskHabiticaId } from "../db/queries";
+import { getSavedHabiticaSettings } from "../settings";
 import { HabiticaClient, HabiticaError } from "./client";
 import { completeTaskInHabitica, pushTask } from "./sync";
 
-export function getHabiticaClient(): HabiticaClient {
-  const userId = process.env.HABITICA_USER_ID;
-  const apiToken = process.env.HABITICA_API_TOKEN;
+export async function getHabiticaClient(): Promise<HabiticaClient> {
+  const saved = await getSavedHabiticaSettings();
+  const userId = saved.userId ?? process.env.HABITICA_USER_ID;
+  const apiToken = saved.apiToken ?? process.env.HABITICA_API_TOKEN;
   if (!userId || !apiToken) {
     throw new Error(
-      "Habitica credentials missing — set HABITICA_USER_ID and HABITICA_API_TOKEN",
+      "Habitica credentials missing — add them in Settings or set HABITICA_USER_ID / HABITICA_API_TOKEN",
     );
   }
   return new HabiticaClient({ userId, apiToken });
@@ -25,7 +27,7 @@ export async function syncTaskToHabitica(
   if (!task) return false;
 
   try {
-    const c = client ?? getHabiticaClient();
+    const c = client ?? (await getHabiticaClient());
 
     // Completed local tasks that already exist in Habitica → score up.
     if (task.status === "done" && task.habiticaId) {

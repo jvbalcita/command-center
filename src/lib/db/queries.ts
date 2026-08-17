@@ -3,9 +3,11 @@ import { db } from "./index";
 import {
   activity,
   projects,
+  settings,
   syncLog,
   tasks,
   type ActivityRow,
+  type SettingRow,
   type NewProject,
   type NewSyncLog,
   type NewTask,
@@ -184,4 +186,25 @@ export async function listActivity(limit = 25): Promise<ActivityRow[]> {
     .from(activity)
     .orderBy(desc(activity.createdAt))
     .limit(limit);
+}
+
+// ── Settings (key/value) ────────────────────────────────────
+export async function getSetting(key: string): Promise<string | null> {
+  const rows = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.key, key))
+    .limit(1);
+  return rows[0]?.value ?? null;
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  await db
+    .insert(settings)
+    .values({ key, value })
+    .onConflictDoUpdate({ target: settings.key, set: { value } });
+}
+
+export async function listSettings(): Promise<SettingRow[]> {
+  return db.select().from(settings).orderBy(asc(settings.key));
 }

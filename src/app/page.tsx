@@ -1,4 +1,5 @@
 import { listProjects, listTasks } from "@/lib/db/queries";
+import { getSavedHabiticaSettings } from "@/lib/settings";
 import type { Task } from "@/lib/db/schema";
 import { AppSidebar } from "./_components/app-sidebar";
 import { KanbanBoard } from "./_components/kanban-board";
@@ -7,6 +8,7 @@ import { ThemeToggle } from "./_components/theme-toggle";
 import { DashboardStats } from "./_components/dashboard-stats";
 import { ActivityFeed } from "./_components/activity-feed";
 import { CommandBar } from "./_components/command-bar";
+import { SettingsDialog } from "./_components/settings-dialog";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Breadcrumb,
@@ -24,6 +26,7 @@ export default async function Home({
 }) {
   const sp = await searchParams;
   const projects = await listProjects();
+  const savedHabitica = await getSavedHabiticaSettings();
 
   let tasks: Task[];
   let heading: string;
@@ -75,6 +78,7 @@ export default async function Home({
             </span>
             <CommandBar projects={projects} />
             <ThemeToggle />
+            <SettingsDialog initialUserId={savedHabitica.userId ?? ""} />
             <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
           </div>
         </header>

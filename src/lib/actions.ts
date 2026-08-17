@@ -16,6 +16,8 @@ import {
   updateTask as dbUpdateTask,
 } from "./db/queries";
 import { createProjectSchema, taskSchema, type ActionState } from "./validation";
+import { getSavedHabiticaSettings, saveHabiticaSettings } from "./settings";
+import { getHabiticaClient, syncAllTasks } from "./habitica/service";
 import type { Task } from "./db/schema";
 
 const STATUS_LABEL: Record<Task["status"], string> = {
@@ -192,4 +194,56 @@ export async function archiveProjectAction(projectId: number): Promise<void> {
     });
   }
   revalidatePath("/");
+}
+
+// ── Habitica settings / sync ────────────────────────────────
+export async function saveHabiticaSettingsAction(
+  formData: FormData,
+): Promise<ActionState> {
+  const userId = String(formData.get("userId") ?? "").trim();
+  const apiToken = String(formData.get("apiToken") ?? "").trim();
+  if (!userId) {
+    return { ok: false, error: "User ID is required." };
+  }
+
+  let finalToken = apiToken;
+  if (!finalToken) {
+    // Keep the existing saved token when the field is left blank.
+    const saved = await getSavedHabiticaSettings();
+    finalToken = saved.apiToken ?? "";
+  }
+  if (!finalToken) {
+    return { ok: false, error: "API Token is required (no saved token to keep)." };
+  }
+
+  await saveHabiticaSettings({ userId, apiToken: finalToken });
+  return { ok: true };
+}
+
+export async function testHabiticaConnectionAction(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  try {
+    const client = await getHabiticaClient();
+    const user = await client.getUser();
+    return { ok: true, message: `Connected — Habitica user ${user.id}` };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Connection failed",
+    };
+  }
+}
+
+export async function syncNowAction(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const result = await syncAllTasks();
+    return {
+      ok: true,
+      message: `Synced ${result.synced} task(s), ${result.failed} failed`,
+    };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Sync failed" };
+  }
 }
