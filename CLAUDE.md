@@ -124,3 +124,20 @@ README.md
 ## 12. Definition of done
 
 A task is done when: **typecheck ✓, lint ✓, tests ✓, build ✓**, and (where relevant) the Habitica sync round-trip is verified against a test account.
+
+## Design System (added 2026-08-18)
+
+Use the **ui-ux-pro-max** skill for all UI/UX decisions. The persisted design system is the single source of visual truth: `design-system/mission-control/MASTER.md`.
+
+- **Dials:** variance 6 (balanced/modern) · motion 3 (subtle) · density 6 (standard)
+- **Style:** Flat Design — light + dark, minimalist, typography-focused, no gradients/shadows
+- **Palette:** teal primary `#0D9488`, orange accent `#EA580C` (full tokens in MASTER.md)
+- **Type:** Plus Jakarta Sans
+- **Motion:** subtle only (150–300ms), respect `prefers-reduced-motion`
+
+**Hard design rules (no AI slop):**
+- Fast + responsive (375/768/1024/1440), mobile-first, no horizontal scroll
+- SVG icons (Lucide) — never emoji as icons
+- Contrast ≥ 4.5:1, visible focus states, cursor-pointer on clickables
+- Semantic color tokens only — no raw hex in components
+- Run the Pre-Delivery Checklist in MASTER.md before shipping any UI
