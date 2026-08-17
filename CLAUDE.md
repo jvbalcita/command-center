@@ -133,11 +133,13 @@ Use the **ui-ux-pro-max** skill for all UI/UX decisions. The persisted design sy
 - **Style:** Flat Design — light + dark, minimalist, typography-focused, no gradients/shadows
 - **Palette:** teal primary `#0D9488`, orange accent `#EA580C` (full tokens in MASTER.md)
 - **Type:** Plus Jakarta Sans
+- **Icons:** HugeIcons (`@hugeicons/react`) — do NOT use Lucide
+- **Palette status:** teal #0D9488 + orange #EA580C is provisional — Jack judges after full build
 - **Motion:** subtle only (150–300ms), respect `prefers-reduced-motion`
 
 **Hard design rules (no AI slop):**
 - Fast + responsive (375/768/1024/1440), mobile-first, no horizontal scroll
-- SVG icons (Lucide) — never emoji as icons
+- SVG icons (HugeIcons, `@hugeicons/react`) — never emoji as icons
 - Contrast ≥ 4.5:1, visible focus states, cursor-pointer on clickables
 - Semantic color tokens only — no raw hex in components
 - Run the Pre-Delivery Checklist in MASTER.md before shipping any UI

@@ -222,7 +222,7 @@ gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTri
 Before delivering any UI code, verify:
 
 - [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
+- [ ] All icons from consistent icon set (HugeIcons (`@hugeicons/react`))
 - [ ] `cursor-pointer` on all clickable elements
 - [ ] Hover states with smooth transitions (150-300ms)
 - [ ] Light mode: text contrast 4.5:1 minimum
