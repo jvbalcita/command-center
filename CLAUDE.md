@@ -38,6 +38,8 @@ npm run test         # Vitest
 npm run db:generate  # drizzle-kit generate
 npm run db:migrate   # drizzle-kit migrate / push
 npm run db:studio    # drizzle-kit studio
+npm run db:seed      # seed dev data (tsx)
+npm run sync:run     # manual Habitica sync (needs creds)
 ```
 
 ## 4. Directory structure
