@@ -73,7 +73,7 @@ export default async function Home({
             <span className="hidden text-xs text-muted-foreground sm:block">
               {openCount} open
             </span>
-            <CommandBar />
+            <CommandBar projects={projects} />
             <ThemeToggle />
             <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
           </div>
