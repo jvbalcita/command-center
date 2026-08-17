@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
 import {
   projects,
@@ -53,14 +53,26 @@ export async function archiveProject(id: number): Promise<Project | null> {
 
 // ── Tasks ────────────────────────────────────────────────────
 export async function listTasks(
-  opts: { projectId?: number; status?: Task["status"]; includeArchived?: boolean } = {},
+  opts: {
+    projectId?: number | null;
+    status?: Task["status"];
+    includeArchived?: boolean;
+  } = {},
 ): Promise<Task[]> {
+  // projectId: undefined = all, null = inbox (no project), number = filter
+  const projectCond =
+    opts.projectId === undefined
+      ? undefined
+      : opts.projectId === null
+        ? isNull(tasks.projectId)
+        : eq(tasks.projectId, opts.projectId);
+
   return db
     .select()
     .from(tasks)
     .where(
       and(
-        opts.projectId != null ? eq(tasks.projectId, opts.projectId) : undefined,
+        projectCond,
         opts.status ? eq(tasks.status, opts.status) : undefined,
         opts.includeArchived ? undefined : eq(tasks.isArchived, false),
       ),

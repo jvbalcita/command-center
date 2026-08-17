@@ -91,9 +91,9 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] Manual trigger (`sync:run`); scheduled cron → Phase 7 (needs creds)
 
 ### Phase 4 — Tasks UI
-- [ ] Project list + create
-- [ ] Task board/list with create/edit/complete/delete
-- [ ] Priorities + due dates + project grouping
+- [x] Project list + create (sidebar + NewProject dialog)
+- [x] Task list with create/edit/complete/delete (dialogs + toggle + delete)
+- [x] Priorities + due dates + project filter (badges + calendar + group-by-project)
 
 ### Phase 5 — Dashboard + command bar + activity
 - [ ] Dashboard: today, due/overdue, Habitica stats

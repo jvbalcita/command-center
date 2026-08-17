@@ -145,3 +145,9 @@ Use the **ui-ux-pro-max** skill for all UI/UX decisions. The persisted design sy
 - Contrast ≥ 4.5:1, visible focus states, cursor-pointer on clickables
 - Semantic color tokens only — no raw hex in components
 - Run the Pre-Delivery Checklist in MASTER.md before shipping any UI
+
+## Stack notes (2026-08-18)
+
+- **shadcn/ui now uses Base UI** (`@base-ui/react/*`), not Radix. Use `render={<Button />}` on triggers instead of `asChild`; `DialogTrigger` accepts `className`/`aria-*` directly.
+- **Icons = HugeIcons**: renderer `@hugeicons/react` (`HugeiconsIcon`) + icon set `@hugeicons/core-free-icons` (named `XxxIcon` exports). Usage: `<HugeiconsIcon icon={Rocket02Icon} size={18} strokeWidth={1.8} />`. Do NOT use Lucide.
+- **Forms**: client `handleSubmit(formData)` + `useTransition` calling a server action (avoids the `react-hooks/set-state-in-effect` lint error). Server actions return `ActionState` (`{ ok, error? }`).
