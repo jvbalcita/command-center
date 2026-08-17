@@ -87,7 +87,11 @@ export function TaskFormFields({
           <Label>Priority</Label>
           <Select value={priority} onValueChange={(v) => setPriority(v ?? "medium")}>
             <SelectTrigger type="button" className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value: string | null) =>
+                  value ? value.charAt(0).toUpperCase() + value.slice(1) : ""
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {PRIORITIES.map((p) => (
@@ -156,7 +160,13 @@ export function TaskFormFields({
         <Label>Project</Label>
         <Select value={projectId} onValueChange={(v) => setProjectId(v ?? "")}>
           <SelectTrigger type="button" className="w-full">
-            <SelectValue />
+            <SelectValue>
+              {(value: string | null) => {
+                if (!value) return "No project (inbox)";
+                const project = projects.find((p) => String(p.id) === value);
+                return project ? project.name : value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">No project (inbox)</SelectItem>
