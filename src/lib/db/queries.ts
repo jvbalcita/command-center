@@ -149,3 +149,19 @@ export async function setTaskHabiticaId(
 export async function logSync(input: NewSyncLog): Promise<void> {
   await db.insert(syncLog).values(input);
 }
+
+export async function setTaskStatus(
+  id: number,
+  status: Task["status"],
+): Promise<Task | null> {
+  const rows = await db
+    .update(tasks)
+    .set({
+      status,
+      completedAt: status === "done" ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(tasks.id, id))
+    .returning();
+  return rows[0] ?? null;
+}

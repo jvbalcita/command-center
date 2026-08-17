@@ -8,9 +8,11 @@ import {
   deleteTask as dbDeleteTask,
   getTask,
   reopenTask,
+  setTaskStatus,
   updateTask as dbUpdateTask,
 } from "./db/queries";
 import { createProjectSchema, taskSchema, type ActionState } from "./validation";
+import type { Task } from "./db/schema";
 
 function toDueDate(value: string | undefined): Date | null {
   if (!value) return null;
@@ -82,6 +84,11 @@ export async function toggleTaskCompleteAction(taskId: number): Promise<void> {
   if (!task) return;
   if (task.status === "done") await reopenTask(taskId);
   else await completeTask(taskId);
+  revalidatePath("/");
+}
+
+export async function moveTaskAction(taskId: number, status: Task["status"]): Promise<void> {
+  await setTaskStatus(taskId, status);
   revalidatePath("/");
 }
 

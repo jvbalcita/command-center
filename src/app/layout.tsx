@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist_Mono, Oxanium, Space_Grotesk } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+const heading = Space_Grotesk({
+  variable: "--font-heading",
+  subsets: ["latin"],
+});
+
+const body = Oxanium({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -21,9 +27,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${mono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${heading.variable} ${body.variable} ${mono.variable} h-full antialiased`}
+    >
       <body className="min-h-full">
-        <TooltipProvider>{children}</TooltipProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -27,7 +27,7 @@ export async function AppSidebar({ active }: { active: string }) {
             <HugeiconsIcon icon={Rocket02Icon} size={18} strokeWidth={1.8} />
           </span>
           <div className="min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-            <div className="truncate text-sm font-bold tracking-tight">Mission Control</div>
+            <div className="truncate text-sm font-heading font-bold tracking-tight">Mission Control</div>
             <div className="truncate text-[11px] text-muted-foreground">Your command center</div>
           </div>
         </div>

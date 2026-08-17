@@ -1,25 +1,11 @@
 import { listProjects, listTasks } from "@/lib/db/queries";
 import type { Task } from "@/lib/db/schema";
-import { PRIORITY_META } from "@/lib/task-utils";
 import { AppSidebar } from "./_components/app-sidebar";
-import { TaskList } from "./_components/task-list";
+import { KanbanBoard } from "./_components/kanban-board";
 import { NewTaskButton } from "./_components/new-task-button";
+import { ThemeToggle } from "./_components/theme-toggle";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-
-function sortTasks(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
-    const aDone = a.status === "done" ? 1 : 0;
-    const bDone = b.status === "done" ? 1 : 0;
-    if (aDone !== bDone) return aDone - bDone;
-    const aDue = a.dueDate?.getTime() ?? Infinity;
-    const bDue = b.dueDate?.getTime() ?? Infinity;
-    if (aDue !== bDue) return aDue - bDue;
-    const aRank = PRIORITY_META[(a.priority ?? "medium") as keyof typeof PRIORITY_META].rank;
-    const bRank = PRIORITY_META[(b.priority ?? "medium") as keyof typeof PRIORITY_META].rank;
-    return bRank - aRank;
-  });
-}
 
 export default async function Home({
   searchParams,
@@ -51,7 +37,6 @@ export default async function Home({
     active = "all";
   }
 
-  tasks = sortTasks(tasks);
   const openCount = tasks.filter((t) => t.status !== "done").length;
 
   return (
@@ -68,13 +53,14 @@ export default async function Home({
                 {openCount} open {openCount === 1 ? "task" : "tasks"}
               </p>
             </div>
-            <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
+            </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl px-6 py-8">
-            <TaskList tasks={tasks} projects={projects} />
-          </div>
+        <main className="min-h-0 flex-1 overflow-hidden">
+          <KanbanBoard tasks={tasks} projects={projects} />
         </main>
       </SidebarInset>
     </SidebarProvider>

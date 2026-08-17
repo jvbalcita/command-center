@@ -56,3 +56,19 @@ export function toDateInputValue(ms: Date | number | null): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+export const STATUSES = ["todo", "in_progress", "done"] as const;
+export type Status = (typeof STATUSES)[number];
+
+export const STATUS_META: Record<
+  Status,
+  { label: string; dot: string; ring: string }
+> = {
+  todo: { label: "Todo", dot: "bg-slate-400", ring: "text-slate-400" },
+  in_progress: {
+    label: "In Progress",
+    dot: "bg-teal-500",
+    ring: "text-teal-500",
+  },
+  done: { label: "Done", dot: "bg-emerald-500", ring: "text-emerald-500" },
+};
