@@ -1,20 +1,40 @@
 "use client";
 
+import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { PRIORITIES } from "@/lib/task-utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PRIORITIES, toDateInputValue } from "@/lib/task-utils";
 import type { Project } from "@/lib/db/schema";
-
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface TaskDefaults {
   title?: string;
   notes?: string;
   priority?: string;
-  dueDate?: string;
+  dueDate?: string; // "YYYY-MM-DD" or ""
   projectId?: string | number;
+}
+
+function parseDate(value: string | undefined): Date | undefined {
+  if (!value) return undefined;
+  const d = new Date(`${value}T12:00:00`);
+  return isNaN(d.getTime()) ? undefined : d;
 }
 
 export function TaskFormFields({
@@ -26,7 +46,13 @@ export function TaskFormFields({
   defaults?: TaskDefaults;
   defaultProjectId?: number;
 }) {
-  const projectId = defaults?.projectId ?? defaultProjectId ?? "";
+  const [priority, setPriority] = useState<string>(defaults?.priority ?? "medium");
+  const [projectId, setProjectId] = useState<string>(
+    defaults?.projectId != null
+      ? String(defaults.projectId)
+      : String(defaultProjectId ?? ""),
+  );
+  const [date, setDate] = useState<Date | undefined>(parseDate(defaults?.dueDate));
 
   return (
     <>
@@ -52,48 +78,95 @@ export function TaskFormFields({
         />
       </div>
 
+      <input type="hidden" name="priority" value={priority} />
+      <input type="hidden" name="projectId" value={projectId} />
+      <input type="hidden" name="dueDate" value={date ? toDateInputValue(date) : ""} />
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="priority">Priority</Label>
-          <select
-            id="priority"
-            name="priority"
-            defaultValue={defaults?.priority ?? "medium"}
-            className={selectClass}
-          >
-            {PRIORITIES.map((p) => (
-              <option key={p} value={p} className="capitalize">
-                {p}
-              </option>
-            ))}
-          </select>
+          <Label>Priority</Label>
+          <Select value={priority} onValueChange={(v) => setPriority(v ?? "medium")}>
+            <SelectTrigger type="button" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITIES.map((p) => (
+                <SelectItem key={p} value={p} className="capitalize">
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="space-y-1.5">
-          <Label htmlFor="dueDate">Due date</Label>
-          <Input
-            id="dueDate"
-            name="dueDate"
-            type="date"
-            defaultValue={defaults?.dueDate}
-          />
+          <Label>Due date</Label>
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between font-normal"
+                >
+                  <span className={date ? "" : "text-muted-foreground"}>
+                    {date
+                      ? date.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "Pick a date"}
+                  </span>
+                  <HugeiconsIcon
+                    icon={Calendar03Icon}
+                    size={16}
+                    strokeWidth={1.7}
+                    className="text-muted-foreground"
+                  />
+                </Button>
+              }
+            />
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => setDate(d ?? undefined)}
+                autoFocus
+              />
+              {date ? (
+                <div className="border-t border-border p-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center text-muted-foreground"
+                    onClick={() => setDate(undefined)}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              ) : null}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="projectId">Project</Label>
-        <select
-          id="projectId"
-          name="projectId"
-          defaultValue={String(projectId)}
-          className={selectClass}
-        >
-          <option value="">No project (inbox)</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <Label>Project</Label>
+        <Select value={projectId} onValueChange={(v) => setProjectId(v ?? "")}>
+          <SelectTrigger type="button" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">No project (inbox)</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={String(p.id)}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </>
   );

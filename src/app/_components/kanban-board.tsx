@@ -69,7 +69,7 @@ export function KanbanBoard({ tasks, projects }: { tasks: Task[]; projects: Proj
       </div>
       <DragOverlay>
         {activeTask ? (
-          <div className="rotate-2 rounded-xl border border-border bg-card px-3 py-3 shadow-xl ring-1 ring-primary/20">
+          <div className="w-64 rotate-2 rounded-xl border border-border bg-card px-3 py-3 shadow-xl ring-1 ring-primary/20">
             <p className="text-sm font-medium text-foreground">{activeTask.title}</p>
           </div>
         ) : null}
