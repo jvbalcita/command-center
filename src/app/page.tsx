@@ -4,6 +4,9 @@ import { AppSidebar } from "./_components/app-sidebar";
 import { KanbanBoard } from "./_components/kanban-board";
 import { NewTaskButton } from "./_components/new-task-button";
 import { ThemeToggle } from "./_components/theme-toggle";
+import { DashboardStats } from "./_components/dashboard-stats";
+import { ActivityFeed } from "./_components/activity-feed";
+import { CommandBar } from "./_components/command-bar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -71,12 +74,19 @@ export default async function Home({
             <span className="hidden text-xs text-muted-foreground sm:block">
               {openCount} open
             </span>
+            <CommandBar />
             <ThemeToggle />
             <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-hidden">
-          <KanbanBoard tasks={tasks} projects={projects} />
+        <main className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <DashboardStats tasks={tasks} />
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <KanbanBoard tasks={tasks} projects={projects} />
+            </div>
+          </div>
+          <ActivityFeed />
         </main>
       </SidebarInset>
     </SidebarProvider>

@@ -1,9 +1,11 @@
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
 import {
+  activity,
   projects,
   syncLog,
   tasks,
+  type ActivityRow,
   type NewProject,
   type NewSyncLog,
   type NewTask,
@@ -164,4 +166,22 @@ export async function setTaskStatus(
     .where(eq(tasks.id, id))
     .returning();
   return rows[0] ?? null;
+}
+
+// ── Activity ────────────────────────────────────────────────
+export async function logActivity(input: {
+  type: string;
+  entityType?: string | null;
+  entityId?: number | null;
+  summary: string;
+}): Promise<void> {
+  await db.insert(activity).values(input);
+}
+
+export async function listActivity(limit = 25): Promise<ActivityRow[]> {
+  return db
+    .select()
+    .from(activity)
+    .orderBy(desc(activity.createdAt))
+    .limit(limit);
 }
