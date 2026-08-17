@@ -159,3 +159,11 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - Wired shadcn components into task form: `Select` (priority, project) + `Popover`/`Calendar` date picker (with Clear). Swapped all lucide → HugeIcons in select.tsx/calendar.tsx.
 - Added `logActivity` + `listActivity` to queries; all server actions now log to `activity`.
 - Added `DashboardStats` (Total/Open/In progress/Due today/Overdue), `ActivityFeed` (right panel), `CommandBar` (Cmd+K quick-add).
+
+## Recent work (2026-08-18, polish batch)
+- Fixed hydration mismatch (dnd-kit useUniqueId counter → stable `id` on DndContext).
+- Project select now shows name (SelectValue function-child); priority capitalized.
+- Added project ellipsis menu (edit/delete) + AlertDialog confirmations for all destructive actions.
+- Activity feed wrapped in ScrollArea; command bar gained NL parsing (`@project #priority due:tomorrow`) + tests (14 total).
+- Habitica connections settings dialog (save/test/sync) → `settings` table, env fallback.
+- Consolidated agentic-coding best practices into CLAUDE.md.
