@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { InboxIcon, Layers01Icon, Rocket02Icon } from "@hugeicons/core-free-icons";
 import { listProjects } from "@/lib/db/queries";
 import { NewProjectButton } from "./new-project-button";
+import { ProjectActionsMenu } from "./project-actions-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -79,6 +80,7 @@ export async function AppSidebar({ active }: { active: string }) {
                     <span className="size-2.5 shrink-0 rounded-full" style={{ background: p.color ?? "#0d9488" }} />
                     <span className="truncate">{p.name}</span>
                   </SidebarMenuButton>
+                  <ProjectActionsMenu project={p} />
                 </SidebarMenuItem>
               ))
             )}

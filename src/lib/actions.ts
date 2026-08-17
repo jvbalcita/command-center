@@ -2,14 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  archiveProject as dbArchiveProject,
   completeTask,
   createProject as dbCreateProject,
   createTask as dbCreateTask,
   deleteTask as dbDeleteTask,
+  getProject,
   getTask,
   logActivity,
   reopenTask,
   setTaskStatus,
+  updateProject as dbUpdateProject,
   updateTask as dbUpdateTask,
 } from "./db/queries";
 import { createProjectSchema, taskSchema, type ActionState } from "./validation";
@@ -146,6 +149,46 @@ export async function deleteTaskAction(taskId: number): Promise<void> {
       entityType: "task",
       entityId: taskId,
       summary: `Deleted "${task.title}"`,
+    });
+  }
+  revalidatePath("/");
+}
+
+
+export async function updateProjectAction(
+  projectId: number,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = createProjectSchema.safeParse({
+    name: formData.get("name"),
+    color: formData.get("color") || undefined,
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+  await dbUpdateProject(projectId, {
+    name: parsed.data.name,
+    color: parsed.data.color ?? "#0d9488",
+  });
+  await logActivity({
+    type: "project_updated",
+    entityType: "project",
+    entityId: projectId,
+    summary: `Renamed project to "${parsed.data.name}"`,
+  });
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function archiveProjectAction(projectId: number): Promise<void> {
+  const project = await getProject(projectId);
+  await dbArchiveProject(projectId);
+  if (project) {
+    await logActivity({
+      type: "project_archived",
+      entityType: "project",
+      entityId: projectId,
+      summary: `Deleted project "${project.name}"`,
     });
   }
   revalidatePath("/");
