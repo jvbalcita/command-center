@@ -12,13 +12,17 @@
     "db:migrate": "mkdir -p data && drizzle-kit migrate",
     "db:push": "mkdir -p data && drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/lib/db/seed.ts"
+    "db:seed": "tsx src/lib/db/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sync:run": "tsx scripts/sync.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "better-sqlite3": "^13.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.31.0",
     "next": "16.3.1",
@@ -39,6 +43,7 @@
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

@@ -2,8 +2,10 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "./index";
 import {
   projects,
+  syncLog,
   tasks,
   type NewProject,
+  type NewSyncLog,
   type NewTask,
   type Project,
   type Task,
@@ -117,4 +119,21 @@ export async function archiveTask(id: number): Promise<Task | null> {
 
 export async function deleteTask(id: number): Promise<void> {
   await db.delete(tasks).where(eq(tasks.id, id));
+}
+
+
+// ── Habitica sync helpers ───────────────────────────────────
+export async function setTaskHabiticaId(
+  id: number,
+  habiticaId: string,
+  habiticaType: "habit" | "daily" | "todo" | "reward",
+): Promise<void> {
+  await db
+    .update(tasks)
+    .set({ habiticaId, habiticaType, updatedAt: new Date() })
+    .where(eq(tasks.id, id));
+}
+
+export async function logSync(input: NewSyncLog): Promise<void> {
+  await db.insert(syncLog).values(input);
 }

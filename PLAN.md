@@ -86,9 +86,9 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] Repos/queries for tasks & projects
 
 ### Phase 3 — Habitica client
-- [ ] `src/lib/habitica.ts` — typed client (create task, complete, score, get user stats)
-- [ ] Sync service + queue (create/update/complete → Habitica)
-- [ ] Scheduled sync (cron/interval) + manual trigger
+- [x] `src/lib/habitica/` — typed client (create/update/complete/score/getUser/list/delete)
+- [x] Sync service + queue (idempotent `pushTask` + `syncTask`/`syncAll` + in-memory queue + `sync_log`)
+- [x] Manual trigger (`sync:run`); scheduled cron → Phase 7 (needs creds)
 
 ### Phase 4 — Tasks UI
 - [ ] Project list + create

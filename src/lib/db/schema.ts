@@ -41,7 +41,7 @@ export const tasks = sqliteTable(
     completedAt: integer("completed_at", { mode: "timestamp_ms" }),
     // Habitica sync fields (set after first successful sync)
     habiticaId: text("habitica_id"),
-    habiticaType: text("habitica_type"),
+    habiticaType: text("habitica_type", { enum: ["habit", "daily", "todo", "reward"] }),
     sortOrder: integer("sort_order").notNull().default(0),
     isArchived: integer("is_archived", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
