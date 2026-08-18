@@ -13,10 +13,10 @@ import {
 } from "@dnd-kit/core";
 import { moveTaskAction } from "@/lib/actions";
 import { STATUSES, type Status } from "@/lib/task-utils";
-import type { Project, Task } from "@/lib/db/schema";
+import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { KanbanColumn } from "./kanban-column";
 
-export function KanbanBoard({ tasks, projects }: { tasks: Task[]; projects: Project[] }) {
+export function KanbanBoard({ tasks, projects, subtasks }: { tasks: Task[]; projects: Project[]; subtasks: Subtask[] }) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [, startTransition] = useTransition();
   const sensors = useSensors(
@@ -65,6 +65,7 @@ export function KanbanBoard({ tasks, projects }: { tasks: Task[]; projects: Proj
             status={status}
             tasks={byStatus[status]}
             projects={projects}
+            subtasks={subtasks}
           />
         ))}
       </div>

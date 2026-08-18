@@ -96,13 +96,24 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] Priorities + due dates + project filter (badges + calendar + group-by-project)
 
 ### Phase 5 — Dashboard + command bar + activity
-- [ ] Dashboard: today, due/overdue, Habitica stats
-- [ ] Command bar quick-add (parse "X due tomorrow @project")
-- [ ] Activity log page
+- [x] Dashboard: today, due/overdue stats (Habitica stats deferred → Phase 7)
+- [x] Command bar quick-add (parse "X due tomorrow @project")
+- [x] Activity log feed (ScrollArea, 50 latest)
 
 ### Phase 6 — Auth & secrets
 - [ ] Single-user gate (read Habitica creds from env)
 - [ ] `JARVIS_API_KEY`-guarded API (`POST /api/tasks`, `POST /api/tasks/:id/complete`)
+
+### Phase 6.5 — Habitica parity: subtasks + difficulty (pre-pull)
+> Prerequisite so Phase 7's pull has a place to land Habitica checklist items + difficulty.
+
+- [x] Schema: add `tasks.difficulty` (trivial/easy/medium/hard, default easy) + `subtasks` table (task_id, title, completed, position)
+- [x] Types/meta: `DIFFICULTIES` + `DIFFICULTY_META` (label + Habitica value 0.1/1/1.5/2)
+- [x] Queries: subtasks CRUD + difficulty on task create/update
+- [x] Validation: difficulty in taskSchema + subtaskSchema
+- [x] Actions: difficulty in task create/update + checklist replace-on-save
+- [x] UI: difficulty selector + checklist editor in task form; progress + difficulty badge on card
+- [x] Habitica mapping helpers (difficulty <-> priority value, subtasks <-> checklist) for Phase 7 pull
 
 ### Phase 7 — End-to-end sync (with real creds)
 - [ ] Wire Jack's Habitica creds

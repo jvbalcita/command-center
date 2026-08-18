@@ -1,4 +1,4 @@
-import { listProjects, listTasks } from "@/lib/db/queries";
+import { listProjects, listSubtasks, listTasks } from "@/lib/db/queries";
 import { getSavedHabiticaSettings } from "@/lib/settings";
 import type { Task } from "@/lib/db/schema";
 import { AppSidebar } from "./_components/app-sidebar";
@@ -50,6 +50,7 @@ export default async function Home({
     active = "all";
   }
 
+  const subtasks = await listSubtasks(tasks.map((t) => t.id));
   const openCount = tasks.filter((t) => t.status !== "done").length;
 
   return (
@@ -86,7 +87,7 @@ export default async function Home({
           <div className="flex min-w-0 flex-1 flex-col">
             <DashboardStats tasks={tasks} />
             <div className="min-h-0 flex-1 overflow-hidden">
-              <KanbanBoard tasks={tasks} projects={projects} />
+              <KanbanBoard tasks={tasks} projects={projects} subtasks={subtasks} />
             </div>
           </div>
           <ActivityFeed />

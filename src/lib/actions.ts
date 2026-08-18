@@ -6,7 +6,9 @@ import {
   clearProjectFromTasks,
   completeTask,
   createProject as dbCreateProject,
+  createSubtask as dbCreateSubtask,
   createTask as dbCreateTask,
+  deleteSubtasksByTask,
   deleteTask as dbDeleteTask,
   getProject,
   getTask,
@@ -31,6 +33,38 @@ const STATUS_LABEL: Record<Task["status"], string> = {
 function toDueDate(value: string | undefined): Date | null {
   if (!value) return null;
   return new Date(`${value}T12:00:00`);
+}
+
+interface ChecklistDraft {
+  title: string;
+  completed: boolean;
+}
+
+function parseChecklist(raw: string): ChecklistDraft[] {
+  try {
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((x) => ({
+        title: String(x?.title ?? "").trim(),
+        completed: Boolean(x?.completed),
+      }))
+      .filter((x) => x.title.length > 0 && x.title.length <= 200);
+  } catch {
+    return [];
+  }
+}
+
+async function saveChecklist(taskId: number, items: ChecklistDraft[]): Promise<void> {
+  await deleteSubtasksByTask(taskId);
+  for (let i = 0; i < items.length; i++) {
+    await dbCreateSubtask({
+      taskId,
+      title: items[i].title,
+      completed: items[i].completed,
+      position: i,
+    });
+  }
 }
 
 export async function createProjectAction(formData: FormData): Promise<ActionState> {
@@ -61,18 +95,22 @@ export async function createTaskAction(formData: FormData): Promise<ActionState>
     title: formData.get("title"),
     notes: formData.get("notes") || undefined,
     priority: formData.get("priority") || "medium",
+    difficulty: formData.get("difficulty") || "easy",
     dueDate: formData.get("dueDate") || undefined,
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+  const checklist = parseChecklist(String(formData.get("checklist") ?? ""));
   const task = await dbCreateTask({
     title: parsed.data.title,
     notes: parsed.data.notes ?? null,
     priority: parsed.data.priority,
+    difficulty: parsed.data.difficulty,
     dueDate: toDueDate(parsed.data.dueDate),
     projectId: projectIdRaw ? Number(projectIdRaw) : null,
   });
+  await saveChecklist(task.id, checklist);
   await logActivity({
     type: "task_created",
     entityType: "task",
@@ -92,18 +130,22 @@ export async function updateTaskAction(
     title: formData.get("title"),
     notes: formData.get("notes") || undefined,
     priority: formData.get("priority") || "medium",
+    difficulty: formData.get("difficulty") || "easy",
     dueDate: formData.get("dueDate") || undefined,
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+  const checklist = parseChecklist(String(formData.get("checklist") ?? ""));
   await dbUpdateTask(taskId, {
     title: parsed.data.title,
     notes: parsed.data.notes ?? null,
     priority: parsed.data.priority,
+    difficulty: parsed.data.difficulty,
     dueDate: toDueDate(parsed.data.dueDate),
     projectId: projectIdRaw ? Number(projectIdRaw) : null,
   });
+  await saveChecklist(taskId, checklist);
   revalidatePath("/");
   return { ok: true };
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const prioritySchema = z.enum(["low", "medium", "high"]);
+export const difficultySchema = z.enum(["trivial", "easy", "medium", "hard"]);
 
 export const createProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(80),
@@ -14,7 +15,12 @@ export const taskSchema = z.object({
   title: z.string().trim().min(1, "Task title is required").max(200),
   notes: z.string().trim().max(2000).optional(),
   priority: prioritySchema.default("medium"),
+  difficulty: difficultySchema.default("easy"),
   dueDate: z.string().optional(), // "YYYY-MM-DD" or ""
+});
+
+export const subtaskSchema = z.object({
+  title: z.string().trim().min(1, "Subtask is required").max(200),
 });
 
 export type ActionState = { ok: boolean; error?: string };

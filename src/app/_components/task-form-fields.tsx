@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar03Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Calendar03Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,15 +20,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PRIORITIES, toDateInputValue } from "@/lib/task-utils";
+import {
+  DIFFICULTIES,
+  DIFFICULTY_META,
+  PRIORITIES,
+  toDateInputValue,
+} from "@/lib/task-utils";
 import type { Project } from "@/lib/db/schema";
+
+export interface ChecklistDraft {
+  title: string;
+  completed: boolean;
+}
 
 export interface TaskDefaults {
   title?: string;
   notes?: string;
   priority?: string;
+  difficulty?: string;
   dueDate?: string; // "YYYY-MM-DD" or ""
   projectId?: string | number;
+  checklist?: ChecklistDraft[];
 }
 
 function parseDate(value: string | undefined): Date | undefined {
@@ -49,12 +61,32 @@ export function TaskFormFields({
   fieldErrors?: Record<string, string>;
 }) {
   const [priority, setPriority] = useState<string>(defaults?.priority ?? "medium");
+  const [difficulty, setDifficulty] = useState<string>(defaults?.difficulty ?? "easy");
   const [projectId, setProjectId] = useState<string>(
     defaults?.projectId != null
       ? String(defaults.projectId)
       : String(defaultProjectId ?? ""),
   );
   const [date, setDate] = useState<Date | undefined>(parseDate(defaults?.dueDate));
+  const [checklist, setChecklist] = useState<ChecklistDraft[]>(defaults?.checklist ?? []);
+  const [newItem, setNewItem] = useState("");
+
+  function addItem() {
+    const t = newItem.trim();
+    if (!t) return;
+    setChecklist((c) => [...c, { title: t, completed: false }]);
+    setNewItem("");
+  }
+
+  function toggleItem(index: number) {
+    setChecklist((c) =>
+      c.map((item, i) => (i === index ? { ...item, completed: !item.completed } : item)),
+    );
+  }
+
+  function removeItem(index: number) {
+    setChecklist((c) => c.filter((_, i) => i !== index));
+  }
 
   return (
     <>
@@ -87,8 +119,10 @@ export function TaskFormFields({
       </div>
 
       <input type="hidden" name="priority" value={priority} />
+      <input type="hidden" name="difficulty" value={difficulty} />
       <input type="hidden" name="projectId" value={projectId} />
       <input type="hidden" name="dueDate" value={date ? toDateInputValue(date) : ""} />
+      <input type="hidden" name="checklist" value={JSON.stringify(checklist)} />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -111,6 +145,28 @@ export function TaskFormFields({
           </Select>
         </div>
 
+        <div className="space-y-1.5">
+          <Label>Difficulty</Label>
+          <Select value={difficulty} onValueChange={(v) => setDifficulty(v ?? "easy")}>
+            <SelectTrigger type="button" className="w-full">
+              <SelectValue>
+                {(value: string | null) =>
+                  value ? DIFFICULTY_META[value as keyof typeof DIFFICULTY_META]?.label ?? value : ""
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {DIFFICULTIES.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {DIFFICULTY_META[d].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Due date</Label>
           <Popover>
@@ -162,29 +218,81 @@ export function TaskFormFields({
             </PopoverContent>
           </Popover>
         </div>
+
+        <div className="space-y-1.5">
+          <Label>Project</Label>
+          <Select value={projectId} onValueChange={(v) => setProjectId(v ?? "")}>
+            <SelectTrigger type="button" className="w-full">
+              <SelectValue>
+                {(value: string | null) => {
+                  if (!value) return "No project (inbox)";
+                  const project = projects.find((p) => String(p.id) === value);
+                  return project ? project.name : "No project (inbox)";
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No project (inbox)</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={String(p.id)}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Project</Label>
-        <Select value={projectId} onValueChange={(v) => setProjectId(v ?? "")}>
-          <SelectTrigger type="button" className="w-full">
-            <SelectValue>
-              {(value: string | null) => {
-                if (!value) return "No project (inbox)";
-                const project = projects.find((p) => String(p.id) === value);
-                return project ? project.name : "No project (inbox)";
-              }}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">No project (inbox)</SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={String(p.id)}>
-                {p.name}
-              </SelectItem>
+        <Label>Checklist</Label>
+        {checklist.length > 0 ? (
+          <ul className="space-y-1">
+            {checklist.map((item, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5"
+              >
+                <input
+                  type="checkbox"
+                  checked={item.completed}
+                  onChange={() => toggleItem(i)}
+                  className="size-4 shrink-0 accent-teal-600"
+                />
+                <span
+                  className={`flex-1 truncate text-sm ${
+                    item.completed ? "text-muted-foreground line-through" : ""
+                  }`}
+                >
+                  {item.title}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeItem(i)}
+                  className="text-muted-foreground transition-colors hover:text-red-600"
+                  aria-label="Remove sub-task"
+                >
+                  <HugeiconsIcon icon={Delete02Icon} size={15} strokeWidth={1.7} />
+                </button>
+              </li>
             ))}
-          </SelectContent>
-        </Select>
+          </ul>
+        ) : null}
+        <div className="flex gap-2">
+          <Input
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addItem();
+              }
+            }}
+            placeholder="Add a sub-task"
+          />
+          <Button type="button" variant="outline" size="icon-sm" onClick={addItem} aria-label="Add sub-task">
+            <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={1.7} />
+          </Button>
+        </div>
       </div>
     </>
   );

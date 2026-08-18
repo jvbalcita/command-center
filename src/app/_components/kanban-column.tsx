@@ -2,17 +2,19 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { STATUS_META, type Status } from "@/lib/task-utils";
-import type { Project, Task } from "@/lib/db/schema";
+import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { KanbanCard } from "./kanban-card";
 
 export function KanbanColumn({
   status,
   tasks,
   projects,
+  subtasks,
 }: {
   status: Status;
   tasks: Task[];
   projects: Project[];
+  subtasks: Subtask[];
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const meta = STATUS_META[status];
@@ -34,7 +36,7 @@ export function KanbanColumn({
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
         {tasks.map((task) => (
-          <KanbanCard key={task.id} task={task} projects={projects} />
+          <KanbanCard key={task.id} task={task} projects={projects} subtasks={subtasks} />
         ))}
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-10 text-center text-xs text-muted-foreground">

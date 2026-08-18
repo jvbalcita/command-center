@@ -5,12 +5,19 @@ import { useDraggable } from "@dnd-kit/core";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Calendar03Icon,
+  CheckListIcon,
   Flag01Icon,
   Flag02Icon,
   Flag03Icon,
 } from "@hugeicons/core-free-icons";
-import { PRIORITY_META, formatDueDate, type Priority } from "@/lib/task-utils";
-import type { Project, Task } from "@/lib/db/schema";
+import {
+  DIFFICULTY_META,
+  PRIORITY_META,
+  formatDueDate,
+  type Difficulty,
+  type Priority,
+} from "@/lib/task-utils";
+import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { EditTaskDialog } from "./edit-task-dialog";
 
 const PRIORITY_ICON = {
@@ -19,7 +26,15 @@ const PRIORITY_ICON = {
   low: Flag01Icon,
 } as const;
 
-export function KanbanCard({ task, projects }: { task: Task; projects: Project[] }) {
+export function KanbanCard({
+  task,
+  projects,
+  subtasks,
+}: {
+  task: Task;
+  projects: Project[];
+  subtasks: Subtask[];
+}) {
   const [editOpen, setEditOpen] = useState(false);
   const draggingRef = useRef(false);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -41,7 +56,12 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
   const priority = (task.priority ?? "medium") as Priority;
   const meta = PRIORITY_META[priority];
   const PriorityIcon = PRIORITY_ICON[priority];
+  const difficulty = (task.difficulty ?? "easy") as Difficulty;
+  const diffMeta = DIFFICULTY_META[difficulty];
   const project = task.projectId ? projects.find((p) => p.id === task.projectId) : null;
+
+  const taskSubtasks = subtasks.filter((s) => s.taskId === task.id);
+  const doneCount = taskSubtasks.filter((s) => s.completed).length;
 
   function handleClick() {
     if (draggingRef.current) return;
@@ -73,6 +93,10 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
             <HugeiconsIcon icon={PriorityIcon} size={12} strokeWidth={2} />
             {meta.label}
           </span>
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            <span className={`size-1.5 rounded-full ${diffMeta.dot}`} />
+            {diffMeta.label}
+          </span>
           {due.label ? (
             <span
               className={`inline-flex items-center gap-1 ${
@@ -87,6 +111,16 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
               {due.label}
             </span>
           ) : null}
+          {taskSubtasks.length > 0 ? (
+            <span
+              className={`inline-flex items-center gap-1 ${
+                doneCount === taskSubtasks.length ? "text-emerald-600" : "text-muted-foreground"
+              }`}
+            >
+              <HugeiconsIcon icon={CheckListIcon} size={13} strokeWidth={1.8} />
+              {doneCount}/{taskSubtasks.length}
+            </span>
+          ) : null}
           {project ? (
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
               <span className="size-1.5 rounded-full" style={{ background: project.color ?? "#0d9488" }} />
@@ -98,6 +132,7 @@ export function KanbanCard({ task, projects }: { task: Task; projects: Project[]
       <EditTaskDialog
         task={task}
         projects={projects}
+        subtasks={taskSubtasks}
         open={editOpen}
         onOpenChange={setEditOpen}
       />

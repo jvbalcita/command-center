@@ -34,6 +34,9 @@ export const tasks = sqliteTable(
     priority: text("priority", { enum: ["low", "medium", "high"] })
       .notNull()
       .default("medium"),
+    difficulty: text("difficulty", { enum: ["trivial", "easy", "medium", "hard"] })
+      .notNull()
+      .default("easy"),
     status: text("status", { enum: ["todo", "in_progress", "done"] })
       .notNull()
       .default("todo"),
@@ -52,6 +55,22 @@ export const tasks = sqliteTable(
     index("tasks_status_idx").on(table.status),
     uniqueIndex("tasks_habitica_id_idx").on(table.habiticaId),
   ],
+);
+
+export const subtasks = sqliteTable(
+  "subtasks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    taskId: integer("task_id")
+      .references(() => tasks.id, { onDelete: "cascade" })
+      .notNull(),
+    title: text("title").notNull(),
+    completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(now),
+  },
+  (table) => [index("subtasks_task_idx").on(table.taskId)],
 );
 
 export const syncLog = sqliteTable("sync_log", {
@@ -85,6 +104,8 @@ export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
+export type Subtask = typeof subtasks.$inferSelect;
+export type NewSubtask = typeof subtasks.$inferInsert;
 export type SyncLogRow = typeof syncLog.$inferSelect;
 export type NewSyncLog = typeof syncLog.$inferInsert;
 export type ActivityRow = typeof activity.$inferSelect;

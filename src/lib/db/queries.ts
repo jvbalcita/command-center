@@ -1,17 +1,20 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "./index";
 import {
   activity,
   projects,
   settings,
+  subtasks,
   syncLog,
   tasks,
   type ActivityRow,
-  type SettingRow,
   type NewProject,
+  type NewSubtask,
   type NewSyncLog,
   type NewTask,
   type Project,
+  type SettingRow,
+  type Subtask,
   type Task,
 } from "./schema";
 
@@ -142,6 +145,42 @@ export async function archiveTask(id: number): Promise<Task | null> {
 
 export async function deleteTask(id: number): Promise<void> {
   await db.delete(tasks).where(eq(tasks.id, id));
+}
+
+// ── Subtasks (checklist) ────────────────────────────────────
+export async function listSubtasks(taskIds?: number[]): Promise<Subtask[]> {
+  if (taskIds !== undefined && taskIds.length === 0) return [];
+  const cond = taskIds !== undefined ? inArray(subtasks.taskId, taskIds) : undefined;
+  return db
+    .select()
+    .from(subtasks)
+    .where(cond)
+    .orderBy(asc(subtasks.position), asc(subtasks.id));
+}
+
+export async function createSubtask(input: NewSubtask): Promise<Subtask> {
+  const rows = await db.insert(subtasks).values(input).returning();
+  return rows[0];
+}
+
+export async function updateSubtask(
+  id: number,
+  patch: Partial<NewSubtask>,
+): Promise<Subtask | null> {
+  const rows = await db
+    .update(subtasks)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(subtasks.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function deleteSubtask(id: number): Promise<void> {
+  await db.delete(subtasks).where(eq(subtasks.id, id));
+}
+
+export async function deleteSubtasksByTask(taskId: number): Promise<void> {
+  await db.delete(subtasks).where(eq(subtasks.taskId, taskId));
 }
 
 

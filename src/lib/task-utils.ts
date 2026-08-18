@@ -57,6 +57,32 @@ export function toDateInputValue(ms: Date | number | null): string {
   return `${y}-${m}-${day}`;
 }
 
+// ── Difficulty (Habitica parity) ────────────────────────────
+export const DIFFICULTIES = ["trivial", "easy", "medium", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
+export const DIFFICULTY_META: Record<
+  Difficulty,
+  { label: string; habiticaValue: number; dot: string }
+> = {
+  trivial: { label: "Trivial", habiticaValue: 0.1, dot: "bg-slate-400" },
+  easy: { label: "Easy", habiticaValue: 1, dot: "bg-teal-500" },
+  medium: { label: "Medium", habiticaValue: 1.5, dot: "bg-amber-500" },
+  hard: { label: "Hard", habiticaValue: 2, dot: "bg-red-500" },
+};
+
+// Habitica's "priority" field doubles as difficulty (0.1/1/1.5/2).
+export function difficultyToHabitica(d: Difficulty): number {
+  return DIFFICULTY_META[d].habiticaValue;
+}
+
+export function habiticaToDifficulty(v: number): Difficulty {
+  if (v === 0.1) return "trivial";
+  if (v === 1.5) return "medium";
+  if (v === 2) return "hard";
+  return "easy";
+}
+
 export const STATUSES = ["todo", "in_progress", "done"] as const;
 export type Status = (typeof STATUSES)[number];
 

@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { deleteTaskAction, updateTaskAction } from "@/lib/actions";
 import { fieldErrorsFromZod, taskSchema } from "@/lib/validation";
-import type { Project, Task } from "@/lib/db/schema";
+import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { toDateInputValue } from "@/lib/task-utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,11 +30,13 @@ import { TaskFormFields } from "./task-form-fields";
 export function EditTaskDialog({
   task,
   projects,
+  subtasks,
   open,
   onOpenChange,
 }: {
   task: Task;
   projects: Project[];
+  subtasks: Subtask[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -86,8 +88,13 @@ export function EditTaskDialog({
                 title: task.title,
                 notes: task.notes ?? "",
                 priority: task.priority ?? "medium",
+                difficulty: task.difficulty ?? "easy",
                 dueDate: toDateInputValue(task.dueDate),
                 projectId: task.projectId ?? "",
+                checklist: subtasks.map((s) => ({
+                  title: s.title,
+                  completed: s.completed,
+                })),
               }}
               fieldErrors={fieldErrors}
             />
