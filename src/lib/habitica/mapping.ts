@@ -1,17 +1,12 @@
 // Mapping helpers between Mission Control's model and Habitica's.
 // Used by the sync layer (push in Phase 7, pull in the import step).
 import type { Subtask } from "@/lib/db/schema";
+import type { HabiticaChecklistItem } from "./types";
 import {
   DIFFICULTY_META,
   habiticaToDifficulty,
   type Difficulty,
 } from "@/lib/task-utils";
-
-export interface HabiticaChecklistItem {
-  text: string;
-  completed: boolean;
-  id?: string;
-}
 
 /** Mission Control difficulty → Habitica `priority` value (0.1/1/1.5/2). */
 export function difficultyToHabiticaPriority(d: Difficulty): number {

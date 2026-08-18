@@ -3,6 +3,7 @@ import type {
   HabiticaResponse,
   HabiticaStats,
   HabiticaTask,
+  HabiticaTaskQueryType,
   HabiticaUser,
 } from "./types";
 
@@ -68,8 +69,8 @@ export class HabiticaClient {
     return user.stats;
   }
 
-  /** GET /tasks/user[?type=...] */
-  async listTasks(type?: "habit" | "daily" | "todo"): Promise<HabiticaTask[]> {
+  /** GET /tasks/user[?type=...] — `type` uses Habitica's plural forms. */
+  async listTasks(type?: HabiticaTaskQueryType): Promise<HabiticaTask[]> {
     const qs = type ? `?type=${type}` : "";
     return this.request<HabiticaTask[]>(`/tasks/user${qs}`);
   }

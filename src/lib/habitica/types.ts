@@ -2,8 +2,22 @@
 
 export type HabiticaTaskType = "habit" | "daily" | "todo" | "reward";
 
+/** Plural forms used by `GET /tasks/user?type=`. */
+export type HabiticaTaskQueryType =
+  | "habits"
+  | "dailys"
+  | "todos"
+  | "rewards"
+  | "completedTodos";
+
 // Habitica priority: 0.1 trivial, 1 easy, 1.5 medium, 2 hard
 export type HabiticaPriority = 0.1 | 1 | 1.5 | 2;
+
+export interface HabiticaChecklistItem {
+  id?: string;
+  text: string;
+  completed: boolean;
+}
 
 export interface HabiticaTask {
   id: string;
@@ -14,6 +28,8 @@ export interface HabiticaTask {
   completed?: boolean;
   value?: number;
   tags?: string[];
+  checklist?: HabiticaChecklistItem[];
+  date?: string;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown;
@@ -52,4 +68,19 @@ export interface CreateTaskInput {
   notes?: string;
   priority?: HabiticaPriority;
   date?: string; // ISO date (todos/dailies)
+  checklist?: HabiticaChecklistItem[];
+}
+
+
+export interface CachedHabiticaStats {
+  lvl: number;
+  exp: number;
+  toNextLevel: number;
+  gp: number;
+  hp: number;
+  maxHealth: number;
+  mp: number;
+  maxMP: number;
+  class?: string;
+  fetchedAt: number;
 }

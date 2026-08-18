@@ -7,6 +7,8 @@ import { NewTaskButton } from "./_components/new-task-button";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { DashboardStats } from "./_components/dashboard-stats";
 import { ActivityFeed } from "./_components/activity-feed";
+import HabiticaStatsPanel from "@/components/habitica-stats-panel";
+import { getCachedHabiticaStats } from "@/lib/habitica/service";
 import { CommandBar } from "./_components/command-bar";
 import { SettingsDialog } from "./_components/settings-dialog";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -27,6 +29,7 @@ export default async function Home({
   const sp = await searchParams;
   const projects = await listProjects();
   const savedHabitica = await getSavedHabiticaSettings();
+  const habiticaStats = await getCachedHabiticaStats();
 
   let tasks: Task[];
   let heading: string;
@@ -90,7 +93,10 @@ export default async function Home({
               <KanbanBoard tasks={tasks} projects={projects} subtasks={subtasks} />
             </div>
           </div>
-          <ActivityFeed />
+          <div className="flex flex-col gap-3">
+            <ActivityFeed />
+            <HabiticaStatsPanel initial={habiticaStats} />
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>

@@ -1,17 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import type { HabiticaClient } from "./client";
-import { mapPriority, pushTask } from "./sync";
+import { pushTask } from "./sync";
+import { difficultyToHabiticaPriority } from "./mapping";
 
-describe("mapPriority", () => {
-  it("maps local priorities to Habitica numbers", () => {
-    expect(mapPriority("low")).toBe(1);
-    expect(mapPriority("medium")).toBe(1.5);
-    expect(mapPriority("high")).toBe(2);
+describe("difficultyToHabiticaPriority", () => {
+  it("maps Mission Control difficulty to Habitica priority numbers", () => {
+    expect(difficultyToHabiticaPriority("trivial")).toBe(0.1);
+    expect(difficultyToHabiticaPriority("easy")).toBe(1);
+    expect(difficultyToHabiticaPriority("medium")).toBe(1.5);
+    expect(difficultyToHabiticaPriority("hard")).toBe(2);
   });
 });
 
 describe("pushTask", () => {
-  it("creates a Habitica task when there is no habiticaId", async () => {
+  it("creates a Habitica task with difficulty → priority + checklist", async () => {
     const createTask = vi.fn(async () => ({ id: "h-1", type: "todo" as const }));
     const updateTask = vi.fn();
     const client = { createTask, updateTask } as unknown as HabiticaClient;
@@ -20,7 +22,11 @@ describe("pushTask", () => {
       id: 1,
       title: "Write docs",
       notes: null,
-      priority: "high",
+      difficulty: "hard",
+      checklist: [
+        { title: "outline", completed: true },
+        { title: "draft", completed: false },
+      ],
       status: "todo",
       habiticaId: null,
       habiticaType: null,
@@ -28,7 +34,15 @@ describe("pushTask", () => {
 
     expect(result).toEqual({ habiticaId: "h-1", habiticaType: "todo", created: true });
     expect(createTask).toHaveBeenCalledWith(
-      expect.objectContaining({ text: "Write docs", type: "todo", priority: 2 }),
+      expect.objectContaining({
+        text: "Write docs",
+        type: "todo",
+        priority: 2,
+        checklist: [
+          { text: "outline", completed: true },
+          { text: "draft", completed: false },
+        ],
+      }),
     );
     expect(updateTask).not.toHaveBeenCalled();
   });
@@ -42,7 +56,8 @@ describe("pushTask", () => {
       id: 2,
       title: "Existing task",
       notes: "n",
-      priority: "low",
+      difficulty: "easy",
+      checklist: [],
       status: "todo",
       habiticaId: "h-9",
       habiticaType: "todo",

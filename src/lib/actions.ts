@@ -21,7 +21,14 @@ import {
 import { createProjectSchema, taskSchema, type ActionState } from "./validation";
 import { getSavedHabiticaSettings, saveHabiticaSettings } from "./settings";
 import { HabiticaClient } from "./habitica/client";
-import { syncAllTasks } from "./habitica/service";
+import type { CachedHabiticaStats } from "./habitica/types";
+import {
+  deleteTaskInHabitica,
+  enqueueTaskSync,
+  importFromHabitica,
+  refreshHabiticaStats,
+  syncAllTasks,
+} from "./habitica/service";
 import type { Task } from "./db/schema";
 
 const STATUS_LABEL: Record<Task["status"], string> = {
@@ -117,6 +124,7 @@ export async function createTaskAction(formData: FormData): Promise<ActionState>
     entityId: task.id,
     summary: `Created "${task.title}"`,
   });
+  enqueueTaskSync(task.id);
   revalidatePath("/");
   return { ok: true };
 }
@@ -146,6 +154,7 @@ export async function updateTaskAction(
     projectId: projectIdRaw ? Number(projectIdRaw) : null,
   });
   await saveChecklist(taskId, checklist);
+  enqueueTaskSync(taskId);
   revalidatePath("/");
   return { ok: true };
 }
@@ -170,6 +179,7 @@ export async function toggleTaskCompleteAction(taskId: number): Promise<void> {
       summary: `Completed "${task.title}"`,
     });
   }
+  enqueueTaskSync(taskId);
   revalidatePath("/");
 }
 
@@ -183,12 +193,16 @@ export async function moveTaskAction(taskId: number, status: Task["status"]): Pr
     entityId: taskId,
     summary: `Moved "${task.title}" to ${STATUS_LABEL[status]}`,
   });
+  enqueueTaskSync(taskId);
   revalidatePath("/");
 }
 
 export async function deleteTaskAction(taskId: number): Promise<void> {
   const task = await getTask(taskId);
   await dbDeleteTask(taskId);
+  if (task?.habiticaId) {
+    void deleteTaskInHabitica(task.habiticaId, taskId);
+  }
   if (task) {
     await logActivity({
       type: "task_deleted",
@@ -301,5 +315,41 @@ export async function syncNowAction(): Promise<{ ok: boolean; message: string }>
     };
   } catch (err) {
     return { ok: false, message: err instanceof Error ? err.message : "Sync failed" };
+  }
+}
+
+export async function importFromHabiticaAction(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  try {
+    const result = await importFromHabitica();
+    revalidatePath("/");
+    return {
+      ok: true,
+      message: `Imported ${result.imported} from Habitica (skipped ${result.skipped}, failed ${result.failed})`,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Import failed",
+    };
+  }
+}
+
+export async function refreshHabiticaStatsAction(): Promise<{
+  ok: boolean;
+  stats?: CachedHabiticaStats;
+  error?: string;
+}> {
+  try {
+    const stats = await refreshHabiticaStats();
+    revalidatePath("/");
+    return { ok: true, stats };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to refresh stats",
+    };
   }
 }
