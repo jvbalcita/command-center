@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { createTaskAction } from "@/lib/actions";
+import { fieldErrorsFromZod, taskSchema } from "@/lib/validation";
 import type { Project } from "@/lib/db/schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,9 +26,21 @@ export function NewTaskButton({
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
+    const parsed = taskSchema.safeParse({
+      title: formData.get("title"),
+      notes: formData.get("notes") || undefined,
+      priority: formData.get("priority") || "medium",
+      dueDate: formData.get("dueDate") || undefined,
+    });
+    if (!parsed.success) {
+      setFieldErrors(fieldErrorsFromZod(parsed.error));
+      return;
+    }
+    setFieldErrors({});
     setError(null);
     startTransition(async () => {
       const result = await createTaskAction(formData);
@@ -46,8 +59,12 @@ export function NewTaskButton({
         <DialogHeader>
           <DialogTitle>New task</DialogTitle>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
-          <TaskFormFields projects={projects} defaultProjectId={defaultProjectId} />
+        <form action={handleSubmit} noValidate className="space-y-4">
+          <TaskFormFields
+            projects={projects}
+            defaultProjectId={defaultProjectId}
+            fieldErrors={fieldErrors}
+          />
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

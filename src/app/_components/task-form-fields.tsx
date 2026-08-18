@@ -41,10 +41,12 @@ export function TaskFormFields({
   projects,
   defaults,
   defaultProjectId,
+  fieldErrors,
 }: {
   projects: Project[];
   defaults?: TaskDefaults;
   defaultProjectId?: number;
+  fieldErrors?: Record<string, string>;
 }) {
   const [priority, setPriority] = useState<string>(defaults?.priority ?? "medium");
   const [projectId, setProjectId] = useState<string>(
@@ -63,8 +65,11 @@ export function TaskFormFields({
           name="title"
           placeholder="What needs to get done?"
           defaultValue={defaults?.title}
-          required
+          aria-invalid={fieldErrors?.title ? true : undefined}
         />
+        {fieldErrors?.title ? (
+          <p className="text-xs text-red-600">{fieldErrors.title}</p>
+        ) : null}
       </div>
 
       <div className="space-y-1.5">
@@ -76,6 +81,9 @@ export function TaskFormFields({
           rows={3}
           defaultValue={defaults?.notes}
         />
+        {fieldErrors?.notes ? (
+          <p className="text-xs text-red-600">{fieldErrors.notes}</p>
+        ) : null}
       </div>
 
       <input type="hidden" name="priority" value={priority} />
@@ -164,7 +172,7 @@ export function TaskFormFields({
               {(value: string | null) => {
                 if (!value) return "No project (inbox)";
                 const project = projects.find((p) => String(p.id) === value);
-                return project ? project.name : value;
+                return project ? project.name : "No project (inbox)";
               }}
             </SelectValue>
           </SelectTrigger>

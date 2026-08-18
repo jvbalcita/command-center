@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon, Edit01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { archiveProjectAction, updateProjectAction } from "@/lib/actions";
+import { createProjectSchema, fieldErrorsFromZod } from "@/lib/validation";
 import type { Project } from "@/lib/db/schema";
 import { SidebarMenuAction } from "@/components/ui/sidebar";
 import {
@@ -40,10 +41,20 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
   const updateAction = updateProjectAction.bind(null, project.id);
 
   function handleUpdate(formData: FormData) {
+    const parsed = createProjectSchema.safeParse({
+      name: formData.get("name"),
+      color: formData.get("color") || undefined,
+    });
+    if (!parsed.success) {
+      setFieldErrors(fieldErrorsFromZod(parsed.error));
+      return;
+    }
+    setFieldErrors({});
     setError(null);
     startTransition(async () => {
       const result = await updateAction(formData);
@@ -83,10 +94,18 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
           <DialogHeader>
             <DialogTitle>Edit project</DialogTitle>
           </DialogHeader>
-          <form action={handleUpdate} className="space-y-4">
+          <form action={handleUpdate} noValidate className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" defaultValue={project.name} required />
+              <Input
+                id="name"
+                name="name"
+                defaultValue={project.name}
+                aria-invalid={fieldErrors.name ? true : undefined}
+              />
+              {fieldErrors.name ? (
+                <p className="text-xs text-red-600">{fieldErrors.name}</p>
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <Label>Color</Label>
@@ -123,8 +142,8 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete project?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{project.name}&rdquo; will be removed from the sidebar. Its tasks
-              stay on your board.
+              &ldquo;{project.name}&rdquo; will be removed. Its tasks move to the
+              inbox.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

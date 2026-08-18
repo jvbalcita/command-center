@@ -78,7 +78,7 @@ export default async function Home({
             </span>
             <CommandBar projects={projects} />
             <ThemeToggle />
-            <SettingsDialog initialUserId={savedHabitica.userId ?? ""} />
+            <SettingsDialog initialUserId={savedHabitica.userId ?? ""} initialApiToken={savedHabitica.apiToken ?? ""} />
             <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
           </div>
         </header>

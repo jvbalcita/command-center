@@ -56,6 +56,13 @@ export async function archiveProject(id: number): Promise<Project | null> {
 }
 
 // ── Tasks ────────────────────────────────────────────────────
+export async function clearProjectFromTasks(projectId: number): Promise<void> {
+  await db
+    .update(tasks)
+    .set({ projectId: null, updatedAt: new Date() })
+    .where(eq(tasks.projectId, projectId));
+}
+
 export async function listTasks(
   opts: {
     projectId?: number | null;

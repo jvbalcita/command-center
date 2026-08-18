@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { deleteTaskAction, updateTaskAction } from "@/lib/actions";
+import { fieldErrorsFromZod, taskSchema } from "@/lib/validation";
 import type { Project, Task } from "@/lib/db/schema";
 import { toDateInputValue } from "@/lib/task-utils";
 import { Button } from "@/components/ui/button";
@@ -38,11 +39,23 @@ export function EditTaskDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const updateAction = updateTaskAction.bind(null, task.id);
 
   function handleSubmit(formData: FormData) {
+    const parsed = taskSchema.safeParse({
+      title: formData.get("title"),
+      notes: formData.get("notes") || undefined,
+      priority: formData.get("priority") || "medium",
+      dueDate: formData.get("dueDate") || undefined,
+    });
+    if (!parsed.success) {
+      setFieldErrors(fieldErrorsFromZod(parsed.error));
+      return;
+    }
+    setFieldErrors({});
     setError(null);
     startTransition(async () => {
       const result = await updateAction(formData);
@@ -66,7 +79,7 @@ export function EditTaskDialog({
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
           </DialogHeader>
-          <form action={handleSubmit} className="space-y-4">
+          <form action={handleSubmit} noValidate className="space-y-4">
             <TaskFormFields
               projects={projects}
               defaults={{
@@ -76,6 +89,7 @@ export function EditTaskDialog({
                 dueDate: toDateInputValue(task.dueDate),
                 projectId: task.projectId ?? "",
               }}
+              fieldErrors={fieldErrors}
             />
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <DialogFooter>

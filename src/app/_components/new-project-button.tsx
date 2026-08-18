@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { createProjectAction } from "@/lib/actions";
+import { createProjectSchema, fieldErrorsFromZod } from "@/lib/validation";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +23,19 @@ const COLORS = ["#0d9488", "#ea580c", "#2563eb", "#7c3aed", "#db2777", "#16a34a"
 export function NewProjectButton() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
+    const parsed = createProjectSchema.safeParse({
+      name: formData.get("name"),
+      color: formData.get("color") || undefined,
+    });
+    if (!parsed.success) {
+      setFieldErrors(fieldErrorsFromZod(parsed.error));
+      return;
+    }
+    setFieldErrors({});
     setError(null);
     startTransition(async () => {
       const result = await createProjectAction(formData);
@@ -47,10 +58,18 @@ export function NewProjectButton() {
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
+        <form action={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" placeholder="e.g. Ship feature" required />
+            <Input
+              id="name"
+              name="name"
+              placeholder="e.g. Ship feature"
+              aria-invalid={fieldErrors.name ? true : undefined}
+            />
+            {fieldErrors.name ? (
+              <p className="text-xs text-red-600">{fieldErrors.name}</p>
+            ) : null}
           </div>
           <div className="space-y-1.5">
             <Label>Color</Label>

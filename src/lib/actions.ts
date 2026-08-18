@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import {
   archiveProject as dbArchiveProject,
+  clearProjectFromTasks,
   completeTask,
   createProject as dbCreateProject,
   createTask as dbCreateTask,
@@ -17,7 +18,8 @@ import {
 } from "./db/queries";
 import { createProjectSchema, taskSchema, type ActionState } from "./validation";
 import { getSavedHabiticaSettings, saveHabiticaSettings } from "./settings";
-import { getHabiticaClient, syncAllTasks } from "./habitica/service";
+import { HabiticaClient } from "./habitica/client";
+import { syncAllTasks } from "./habitica/service";
 import type { Task } from "./db/schema";
 
 const STATUS_LABEL: Record<Task["status"], string> = {
@@ -185,6 +187,7 @@ export async function updateProjectAction(
 export async function archiveProjectAction(projectId: number): Promise<void> {
   const project = await getProject(projectId);
   await dbArchiveProject(projectId);
+  await clearProjectFromTasks(projectId);
   if (project) {
     await logActivity({
       type: "project_archived",
@@ -220,12 +223,23 @@ export async function saveHabiticaSettingsAction(
   return { ok: true };
 }
 
-export async function testHabiticaConnectionAction(): Promise<{
-  ok: boolean;
-  message: string;
-}> {
+export async function testHabiticaConnectionAction(
+  formData: FormData,
+): Promise<{ ok: boolean; message: string }> {
+  const userId = String(formData.get("userId") ?? "").trim();
+  const apiToken = String(formData.get("apiToken") ?? "").trim();
+
+  let finalToken = apiToken;
+  if (!finalToken) {
+    const saved = await getSavedHabiticaSettings();
+    finalToken = saved.apiToken ?? "";
+  }
+  if (!userId || !finalToken) {
+    return { ok: false, message: "Enter a User ID and API Token." };
+  }
+
   try {
-    const client = await getHabiticaClient();
+    const client = new HabiticaClient({ userId, apiToken: finalToken });
     const user = await client.getUser();
     return { ok: true, message: `Connected — Habitica user ${user.id}` };
   } catch (err) {

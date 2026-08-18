@@ -18,3 +18,12 @@ export const taskSchema = z.object({
 });
 
 export type ActionState = { ok: boolean; error?: string };
+
+export function fieldErrorsFromZod(error: z.ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path[0]?.toString() ?? "";
+    if (key && !(key in out)) out[key] = issue.message;
+  }
+  return out;
+}
