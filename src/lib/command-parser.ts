@@ -1,6 +1,9 @@
+import { slug } from "@/lib/utils";
+
 export interface ParsedCommand {
   title: string;
   projectId?: number;
+  projectError?: string;
   priority?: "low" | "medium" | "high";
   dueDate?: string; // YYYY-MM-DD
 }
@@ -70,6 +73,31 @@ function normalizePriority(token: string): "low" | "medium" | "high" | undefined
   }
 }
 
+function cleanTitle(title: string): string {
+  return title
+    .replace(/\s+/g, " ")
+    .replace(/[\s,]+$/g, "")
+    .replace(/\s+\band\b$/i, "")
+    .replace(/[\s,]+$/g, "")
+    .trim();
+}
+
+export function resolveProject(
+  token: string,
+  projects: { id: number; name: string }[],
+): { projectId?: number; projectError?: string } {
+  const needle = slug(token);
+  if (!needle) return { projectError: token };
+
+  const exact = projects.filter((p) => slug(p.name) === needle);
+  if (exact.length === 1) return { projectId: exact[0].id };
+  if (exact.length > 1) return { projectError: token };
+
+  const prefixed = projects.filter((p) => slug(p.name).startsWith(needle));
+  if (prefixed.length === 1) return { projectId: prefixed[0].id };
+  return { projectError: token };
+}
+
 export function parseCommand(
   input: string,
   projects: { id: number; name: string }[],
@@ -79,7 +107,7 @@ export function parseCommand(
   let dueDate: string | undefined;
   const dueMatch = title.match(/due:(\S+)/i);
   if (dueMatch) {
-    dueDate = parseDue(dueMatch[1]);
+    dueDate = parseDue(dueMatch[1].replace(/[.,;:]+$/, ""));
     title = title.replace(dueMatch[0], "");
   }
 
@@ -91,17 +119,21 @@ export function parseCommand(
   }
 
   let projectId: number | undefined;
-  const projMatch = title.match(/@([^\s]+)/);
+  let projectError: string | undefined;
+  const projMatch = title.match(/@([^\s@]+)/);
   if (projMatch) {
-    const name = projMatch[1].toLowerCase();
-    const project = projects.find((p) => p.name.toLowerCase() === name);
-    if (project) {
-      projectId = project.id;
-      title = title.replace(projMatch[0], "");
-    }
+    const raw = projMatch[1].replace(/[.,;:]+$/, "");
+    const resolved = resolveProject(raw, projects);
+    projectId = resolved.projectId;
+    projectError = resolved.projectError;
+    title = title.replace(projMatch[0], "");
   }
 
-  title = title.replace(/\s+/g, " ").trim();
-
-  return { title, projectId, priority, dueDate };
+  return {
+    title: cleanTitle(title),
+    projectId,
+    projectError,
+    priority,
+    dueDate,
+  };
 }

@@ -23,10 +23,10 @@ import {
 
 export function SettingsDialog({
   initialUserId,
-  initialApiToken,
+  hasSavedToken,
 }: {
   initialUserId: string;
-  initialApiToken: string;
+  hasSavedToken: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
@@ -37,7 +37,7 @@ export function SettingsDialog({
   function validate(userId: string, apiToken: string) {
     const errs: Record<string, string> = {};
     if (!userId.trim()) errs.userId = "User ID is required.";
-    if (!apiToken.trim() && !initialApiToken) errs.apiToken = "API Token is required.";
+    if (!apiToken.trim() && !hasSavedToken) errs.apiToken = "API Token is required.";
     return errs;
   }
 
@@ -131,7 +131,7 @@ export function SettingsDialog({
               aria-invalid={fieldErrors.userId ? true : undefined}
             />
             {fieldErrors.userId ? (
-              <p className="text-xs text-red-600">{fieldErrors.userId}</p>
+              <p className="text-xs text-destructive">{fieldErrors.userId}</p>
             ) : null}
           </div>
           <div className="space-y-1.5">
@@ -140,18 +140,18 @@ export function SettingsDialog({
               id="apiToken"
               name="apiToken"
               type="password"
-              defaultValue={initialApiToken}
-              placeholder="API Token"
+              defaultValue=""
+              placeholder={hasSavedToken ? "•••••• (leave blank to keep current)" : "API Token"}
               autoComplete="off"
               aria-invalid={fieldErrors.apiToken ? true : undefined}
             />
             {fieldErrors.apiToken ? (
-              <p className="text-xs text-red-600">{fieldErrors.apiToken}</p>
+              <p className="text-xs text-destructive">{fieldErrors.apiToken}</p>
             ) : null}
           </div>
 
           {status ? (
-            <p className={`text-sm ${status.ok ? "text-primary" : "text-red-600"}`}>
+            <p className={`text-sm ${status.ok ? "text-primary" : "text-destructive"}`}>
               {status.message}
             </p>
           ) : null}

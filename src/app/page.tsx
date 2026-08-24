@@ -1,25 +1,13 @@
-import { listProjects, listSubtasks, listTasks } from "@/lib/db/queries";
+import { listProjects, listTasks, listHabits, listDailies, listSubtasks } from "@/lib/db/queries";
 import { getSavedHabiticaSettings } from "@/lib/settings";
-import type { Task } from "@/lib/db/schema";
-import { AppSidebar } from "./_components/app-sidebar";
+import type { Task, Habit, Daily } from "@/lib/db/schema";
 import { KanbanBoard } from "./_components/kanban-board";
 import { NewTaskButton } from "./_components/new-task-button";
-import { ThemeToggle } from "./_components/theme-toggle";
 import { DashboardStats } from "./_components/dashboard-stats";
 import { ActivityFeed } from "./_components/activity-feed";
-import HabiticaStatsPanel from "@/components/habitica-stats-panel";
-import { getCachedHabiticaStats } from "@/lib/habitica/service";
 import { CommandBar } from "./_components/command-bar";
-import { SettingsDialog } from "./_components/settings-dialog";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { RoutinesBoard } from "./_components/routines-board";
+import { PageShell } from "./_components/page-shell";
 
 export default async function Home({
   searchParams,
@@ -29,12 +17,14 @@ export default async function Home({
   const sp = await searchParams;
   const projects = await listProjects();
   const savedHabitica = await getSavedHabiticaSettings();
-  const habiticaStats = await getCachedHabiticaStats();
 
-  let tasks: Task[];
+  let tasks: Task[] = [];
+  let habits: Habit[] = [];
+  let dailies: Daily[] = [];
   let heading: string;
   let active: string;
   let defaultProjectId: number | undefined;
+  let subtasks: Awaited<ReturnType<typeof listSubtasks>> = [];
 
   if (sp.project) {
     const pid = Number(sp.project);
@@ -47,58 +37,57 @@ export default async function Home({
     tasks = await listTasks({ projectId: null });
     heading = "Inbox";
     active = "inbox";
+  } else if (sp.view === "habits" || sp.view === "dailies" || sp.view === "routines") {
+    habits = await listHabits();
+    dailies = await listDailies();
+    heading = "Habits & Dailies";
+    active = "routines";
   } else {
     tasks = await listTasks();
     heading = "All tasks";
     active = "all";
   }
 
-  const subtasks = await listSubtasks(tasks.map((t) => t.id));
+  if (tasks.length > 0) {
+    subtasks = await listSubtasks(tasks.map((t) => t.id));
+  }
   const openCount = tasks.filter((t) => t.status !== "done").length;
 
   return (
-    <SidebarProvider>
-      <AppSidebar active={active} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div aria-hidden className="mr-2 h-4 w-px shrink-0 bg-border" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">Mission Control</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{heading}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <div className="ml-auto flex items-center gap-2 px-4">
+    <PageShell
+      active={active}
+      breadcrumbs={[
+        { label: "Mission Control", href: "/" },
+        { label: heading },
+      ]}
+      savedHabitica={savedHabitica}
+      rightActions={
+        <>
+          {active !== "routines" ? (
             <span className="hidden text-xs text-muted-foreground sm:block">
               {openCount} open
             </span>
-            <CommandBar projects={projects} />
-            <ThemeToggle />
-            <SettingsDialog initialUserId={savedHabitica.userId ?? ""} initialApiToken={savedHabitica.apiToken ?? ""} />
+          ) : null}
+          <CommandBar projects={projects} />
+          {active !== "routines" ? (
             <NewTaskButton projects={projects} defaultProjectId={defaultProjectId} />
-          </div>
-        </header>
-        <main className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="flex min-w-0 flex-1 flex-col">
+          ) : null}
+        </>
+      }
+    >
+      <div className="flex min-w-0 flex-1 flex-col">
+        {active === "routines" ? (
+          <RoutinesBoard habits={habits} dailies={dailies} />
+        ) : (
+          <>
             <DashboardStats tasks={tasks} />
             <div className="min-h-0 flex-1 overflow-hidden">
               <KanbanBoard tasks={tasks} projects={projects} subtasks={subtasks} />
             </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <ActivityFeed />
-            <HabiticaStatsPanel initial={habiticaStats} />
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          </>
+        )}
+      </div>
+      <ActivityFeed />
+    </PageShell>
   );
 }

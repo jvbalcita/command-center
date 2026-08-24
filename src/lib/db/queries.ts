@@ -1,13 +1,23 @@
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { isDailyDueOn, needsRollover, nextCompleteDaily, nextUncompleteDaily } from "@/lib/daily-state";
 import { db } from "./index";
 import {
   activity,
+  automationRules,
+  dailies,
+  habits,
   projects,
   settings,
   subtasks,
   syncLog,
   tasks,
   type ActivityRow,
+  type AutomationRule,
+  type Daily,
+  type Habit,
+  type NewAutomationRule,
+  type NewDaily,
+  type NewHabit,
   type NewProject,
   type NewSubtask,
   type NewSyncLog,
@@ -253,4 +263,233 @@ export async function setSetting(key: string, value: string): Promise<void> {
 
 export async function listSettings(): Promise<SettingRow[]> {
   return db.select().from(settings).orderBy(asc(settings.key));
+}
+
+export async function getSettings(): Promise<Record<string, string>> {
+  const rows = await db.select().from(settings);
+  const result: Record<string, string> = {};
+  for (const row of rows) {
+    result[row.key] = row.value ?? "";
+  }
+  return result;
+}
+
+// ── Habits ────────────────────────────────────────────────────
+export async function listHabits(): Promise<Habit[]> {
+  return db.select().from(habits).orderBy(asc(habits.sortOrder), desc(habits.createdAt));
+}
+
+export async function getHabit(id: number): Promise<Habit | null> {
+  const rows = await db.select().from(habits).where(eq(habits.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getHabitByHabiticaId(habiticaId: string): Promise<Habit | null> {
+  const rows = await db.select().from(habits).where(eq(habits.habiticaId, habiticaId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createHabit(input: NewHabit): Promise<Habit> {
+  const rows = await db.insert(habits).values(input).returning();
+  return rows[0];
+}
+
+export async function updateHabit(
+  id: number,
+  patch: Partial<NewHabit>,
+): Promise<Habit | null> {
+  const rows = await db
+    .update(habits)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(habits.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function deleteHabit(id: number): Promise<void> {
+  await db.delete(habits).where(eq(habits.id, id));
+}
+
+export async function reorderHabits(ids: number[]): Promise<void> {
+  const now = new Date();
+  for (let i = 0; i < ids.length; i++) {
+    await db
+      .update(habits)
+      .set({ sortOrder: i, updatedAt: now })
+      .where(eq(habits.id, ids[i]));
+  }
+}
+
+export async function incrementHabitCounter(
+  id: number,
+  direction: "up" | "down",
+): Promise<Habit | null> {
+  // Atomic counter update — no read-before-write race condition.
+  // Uses SQL expressions to increment directly in the database.
+  const column = direction === "up" ? habits.counterUp : habits.counterDown;
+  const rows = await db
+    .update(habits)
+    .set({
+      [column.name]: sql`${column} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(habits.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+// ── Dailies ───────────────────────────────────────────────────
+export async function listDailies(): Promise<Daily[]> {
+  const rows = await db.select().from(dailies).orderBy(asc(dailies.sortOrder), desc(dailies.createdAt));
+  const now = new Date();
+  const staleIds = rows.filter((d) => needsRollover(d, now)).map((d) => d.id);
+  const stampIds = rows
+    .filter((d) => d.completedToday && !d.lastCompletedAt && !staleIds.includes(d.id))
+    .map((d) => d.id);
+  if (staleIds.length > 0) {
+    await db
+      .update(dailies)
+      .set({ completedToday: false, updatedAt: now })
+      .where(inArray(dailies.id, staleIds));
+  }
+  if (stampIds.length > 0) {
+    await db
+      .update(dailies)
+      .set({ lastCompletedAt: now, updatedAt: now })
+      .where(inArray(dailies.id, stampIds));
+  }
+  if (staleIds.length === 0 && stampIds.length === 0) return rows;
+
+  const stale = new Set(staleIds);
+  const stamped = new Set(stampIds);
+  return rows.map((d) => {
+    if (stale.has(d.id)) return { ...d, completedToday: false };
+    if (stamped.has(d.id)) return { ...d, lastCompletedAt: now };
+    return d;
+  });
+}
+
+export async function getDaily(id: number): Promise<Daily | null> {
+  const rows = await db.select().from(dailies).where(eq(dailies.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getDailyByHabiticaId(habiticaId: string): Promise<Daily | null> {
+  const rows = await db.select().from(dailies).where(eq(dailies.habiticaId, habiticaId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createDaily(input: NewDaily): Promise<Daily> {
+  const rows = await db.insert(dailies).values(input).returning();
+  return rows[0];
+}
+
+export async function updateDaily(
+  id: number,
+  patch: Partial<NewDaily>,
+): Promise<Daily | null> {
+  const rows = await db
+    .update(dailies)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(dailies.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function completeDaily(id: number): Promise<Daily | null> {
+  const daily = await getDaily(id);
+  if (!daily) return null;
+  const now = new Date();
+  const next = nextCompleteDaily(daily, now);
+  if (!next) return daily;
+  const rows = await db
+    .update(dailies)
+    .set({ ...next, updatedAt: now })
+    .where(eq(dailies.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function uncompleteDaily(id: number): Promise<Daily | null> {
+  const daily = await getDaily(id);
+  if (!daily) return null;
+  const now = new Date();
+  const next = nextUncompleteDaily(daily, now);
+  if (!next) return daily;
+  const rows = await db
+    .update(dailies)
+    .set({ ...next, updatedAt: now })
+    .where(eq(dailies.id, id))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function deleteDaily(id: number): Promise<void> {
+  await db.delete(dailies).where(eq(dailies.id, id));
+}
+
+export async function reorderDailies(ids: number[]): Promise<void> {
+  const now = new Date();
+  for (let i = 0; i < ids.length; i++) {
+    await db
+      .update(dailies)
+      .set({ sortOrder: i, updatedAt: now })
+      .where(eq(dailies.id, ids[i]));
+  }
+}
+
+// ── Daily helpers ─────────────────────────────────────────────
+export async function getDailiesDueToday(): Promise<Daily[]> {
+  const all = await listDailies();
+  const now = new Date();
+  return all.filter((d) => !d.completedToday && isDailyDueOn(d, now));
+}
+
+export async function checkMissedDailies(): Promise<Daily[]> {
+  // Returns dailies that were due yesterday but not completed
+  const all = await listDailies();
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  
+  return all.filter((d) => {
+    if (d.completedToday) return false;
+    if (!d.lastCompletedAt) return true; // never completed
+    const lastCompleted = new Date(d.lastCompletedAt).getTime();
+    return lastCompleted < todayStart - 86_400_000; // completed before yesterday
+  });
+}
+
+// ── Automation Rules ────────────────────────────────────────────
+export async function listAutomationRules(): Promise<AutomationRule[]> {
+  return db.select().from(automationRules).orderBy(asc(automationRules.createdAt));
+}
+
+export async function getAutomationRule(id: number): Promise<AutomationRule | null> {
+  const rows = await db.select().from(automationRules).where(eq(automationRules.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createAutomationRule(input: NewAutomationRule): Promise<AutomationRule> {
+  const now = new Date();
+  const [rule] = await db
+    .insert(automationRules)
+    .values({ ...input, createdAt: now, updatedAt: now })
+    .returning();
+  return rule;
+}
+
+export async function updateAutomationRule(
+  id: number,
+  patch: Partial<Omit<NewAutomationRule, "createdAt">>
+): Promise<AutomationRule | null> {
+  const [rule] = await db
+    .update(automationRules)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(automationRules.id, id))
+    .returning();
+  return rule ?? null;
+}
+
+export async function deleteAutomationRule(id: number): Promise<void> {
+  await db.delete(automationRules).where(eq(automationRules.id, id));
 }

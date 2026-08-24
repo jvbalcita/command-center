@@ -65,7 +65,7 @@ export function NewTaskButton({
             defaultProjectId={defaultProjectId}
             fieldErrors={fieldErrors}
           />
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Adding…" : "Add task"}

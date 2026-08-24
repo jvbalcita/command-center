@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const COLORS = ["#0d9488", "#ea580c", "#2563eb", "#7c3aed", "#db2777", "#16a34a"];
+import { PROJECT_COLORS } from "@/lib/constants";
 
 export function NewProjectButton() {
   const [open, setOpen] = useState(false);
@@ -68,19 +67,19 @@ export function NewProjectButton() {
               aria-invalid={fieldErrors.name ? true : undefined}
             />
             {fieldErrors.name ? (
-              <p className="text-xs text-red-600">{fieldErrors.name}</p>
+              <p className="text-xs text-destructive">{fieldErrors.name}</p>
             ) : null}
           </div>
           <div className="space-y-1.5">
             <Label>Color</Label>
             <div className="flex gap-2">
-              {COLORS.map((c) => (
+              {PROJECT_COLORS.map((c) => (
                 <label key={c} className="relative cursor-pointer">
                   <input
                     type="radio"
                     name="color"
                     value={c}
-                    defaultChecked={c === COLORS[0]}
+                    defaultChecked={c === PROJECT_COLORS[0]}
                     className="peer sr-only"
                   />
                   <span
@@ -91,7 +90,7 @@ export function NewProjectButton() {
               ))}
             </div>
           </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Creating…" : "Create project"}

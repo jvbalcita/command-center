@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { InboxIcon, Layers01Icon, Rocket02Icon } from "@hugeicons/core-free-icons";
+import {
+  InboxIcon,
+  Layers01Icon,
+  Rocket02Icon,
+  CalendarCheckIcon,
+  FlashIcon,
+} from "@hugeicons/core-free-icons";
 import { listProjects } from "@/lib/db/queries";
+import { getCachedHabiticaStats } from "@/lib/habitica/service";
+import HabiticaStatsPanel from "@/components/habitica-stats-panel";
 import { NewProjectButton } from "./new-project-button";
 import { ProjectActionsMenu } from "./project-actions-menu";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -18,6 +27,7 @@ import {
 
 export async function AppSidebar({ active }: { active: string }) {
   const projects = await listProjects();
+  const habiticaStats = await getCachedHabiticaStats();
 
   return (
     <Sidebar collapsible="icon">
@@ -61,6 +71,16 @@ export async function AppSidebar({ active }: { active: string }) {
                 <span>Inbox</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/automation" />}
+                isActive={active === "automation"}
+                tooltip="Automation Rules"
+              >
+                <HugeiconsIcon icon={FlashIcon} size={16} strokeWidth={1.7} />
+                <span>Automation</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
@@ -89,7 +109,27 @@ export async function AppSidebar({ active }: { active: string }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>Routines</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/?view=routines" />}
+                isActive={active === "routines"}
+                tooltip="Habits & Dailies"
+              >
+                <HugeiconsIcon icon={CalendarCheckIcon} size={16} strokeWidth={1.7} />
+                <span>Habits & Dailies</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
+        <HabiticaStatsPanel initial={habiticaStats} />
+      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>

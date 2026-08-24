@@ -1,6 +1,7 @@
 "use client";
 import type { CachedHabiticaStats } from "@/lib/habitica/types";
 import { useTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Refresh01Icon,
   ArrowDown01Icon,
@@ -15,6 +16,7 @@ export default function HabiticaStatsPanel({
   const [stats, setStats] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function refresh() {
     startTransition(async () => {
@@ -38,7 +40,7 @@ export default function HabiticaStatsPanel({
           "@/lib/actions"
         );
         const res = await importFromHabiticaAction();
-        if (res.ok) window.location.reload();
+        if (res.ok) router.refresh();
         else setError(res.message);
       } catch {
         setError("Import failed");

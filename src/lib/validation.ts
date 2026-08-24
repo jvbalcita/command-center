@@ -19,6 +19,29 @@ export const taskSchema = z.object({
   dueDate: z.string().optional(), // "YYYY-MM-DD" or ""
 });
 
+export const habitSchema = z.object({
+  title: z.string().trim().min(1, "Habit title is required").max(200),
+  notes: z.string().trim().max(2000).optional(),
+  difficulty: difficultySchema.default("easy"),
+});
+
+export const dailyFrequencySchema = z.enum(["daily", "weekly", "monthly", "yearly"]);
+
+export const dailySchema = z.object({
+  title: z.string().trim().min(1, "Daily title is required").max(200),
+  notes: z.string().trim().max(2000).optional(),
+  difficulty: difficultySchema.default("easy"),
+  frequency: dailyFrequencySchema.default("daily"),
+  everyX: z.coerce.number().int().min(1).max(365).default(1),
+  startDate: z.string().optional(),
+  repeatDays: z
+    .array(z.number().int().min(0).max(6))
+    .max(7)
+    .optional(),
+  daysOfMonth: z.array(z.number().int().min(1).max(31)).max(31).optional(),
+  weeksOfMonth: z.array(z.number().int().min(0).max(4)).max(5).optional(),
+});
+
 export const subtaskSchema = z.object({
   title: z.string().trim().min(1, "Subtask is required").max(200),
 });

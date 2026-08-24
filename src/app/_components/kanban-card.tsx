@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useTransition } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Calendar03Icon,
   CheckListIcon,
+  CheckmarkCircle02Icon,
   Flag01Icon,
   Flag02Icon,
   Flag03Icon,
 } from "@hugeicons/core-free-icons";
+import { toggleTaskCompleteAction } from "@/lib/actions";
+import { Button } from "@/components/ui/button";
 import {
   DIFFICULTY_META,
   PRIORITY_META,
@@ -19,6 +22,7 @@ import {
 } from "@/lib/task-utils";
 import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { EditTaskDialog } from "./edit-task-dialog";
+import { useDragClickGuard } from "@/hooks/use-drag-click-guard";
 
 const PRIORITY_ICON = {
   high: Flag03Icon,
@@ -36,21 +40,11 @@ export function KanbanCard({
   subtasks: Subtask[];
 }) {
   const [editOpen, setEditOpen] = useState(false);
-  const draggingRef = useRef(false);
+  const [, startTransition] = useTransition();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
   });
-
-  useEffect(() => {
-    if (isDragging) {
-      draggingRef.current = true;
-      return;
-    }
-    const id = setTimeout(() => {
-      draggingRef.current = false;
-    }, 120);
-    return () => clearTimeout(id);
-  }, [isDragging]);
+  const { draggingRef } = useDragClickGuard(isDragging);
 
   const due = formatDueDate(task.dueDate);
   const priority = (task.priority ?? "medium") as Priority;
@@ -79,6 +73,33 @@ export function KanbanCard({
           isDragging ? "opacity-40" : ""
         }`}
       >
+        <div className="flex items-start gap-2">
+          <Button
+            type="button"
+            variant={task.status === "done" ? "secondary" : "outline"}
+            size="icon-sm"
+            className={`mt-0.5 shrink-0 ${
+              task.status === "done"
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                : ""
+            }`}
+            aria-pressed={task.status === "done"}
+            aria-label={task.status === "done" ? `Reopen ${task.title}` : `Complete ${task.title}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              startTransition(() => {
+                void toggleTaskCompleteAction(task.id);
+              });
+            }}
+          >
+            <HugeiconsIcon
+              icon={CheckmarkCircle02Icon}
+              size={16}
+              strokeWidth={task.status === "done" ? 2.2 : 1.6}
+            />
+          </Button>
+          <div className="min-w-0 flex-1">
         <p
           className={`text-sm font-medium leading-snug ${
             task.status === "done" ? "text-muted-foreground line-through" : "text-foreground"
@@ -101,7 +122,7 @@ export function KanbanCard({
             <span
               className={`inline-flex items-center gap-1 ${
                 due.tone === "overdue"
-                  ? "text-red-600"
+                  ? "text-destructive"
                   : due.tone === "soon"
                     ? "text-primary"
                     : "text-muted-foreground"
@@ -127,6 +148,8 @@ export function KanbanCard({
               <span className="truncate">{project.name}</span>
             </span>
           ) : null}
+        </div>
+          </div>
         </div>
       </div>
       <EditTaskDialog

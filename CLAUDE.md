@@ -40,6 +40,7 @@ npm run db:migrate   # drizzle-kit migrate / push
 npm run db:studio    # drizzle-kit studio
 npm run db:seed      # seed dev data (tsx)
 npm run sync:run     # manual Habitica sync (needs creds)
+npm run mc -- help   # agent CLI for tasks/subtasks (no seed files)
 ```
 
 ## 4. Directory structure
@@ -73,6 +74,7 @@ README.md
 - **ESLint + Prettier** enforced; no `eslint-disable` without a comment explaining why.
 - **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`).
 - Components: one per file, named exports for primitives, default exports for pages.
+- **Track Command Center build work** on the **Mission Control** project with `npm run mc -- … --project "Mission Control"`. Other work goes on its own project. Anything without a project goes to **Inbox** (`npm run mc -- add "…"`, no `--project`). Never dump all todos onto Mission Control.
 
 ## 6. Data access rules
 

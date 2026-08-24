@@ -26,6 +26,7 @@ import {
   PRIORITIES,
   toDateInputValue,
 } from "@/lib/task-utils";
+import { DifficultySelect } from "@/components/ui/difficulty-select";
 import type { Project } from "@/lib/db/schema";
 
 export interface ChecklistDraft {
@@ -70,6 +71,8 @@ export function TaskFormFields({
   const [date, setDate] = useState<Date | undefined>(parseDate(defaults?.dueDate));
   const [checklist, setChecklist] = useState<ChecklistDraft[]>(defaults?.checklist ?? []);
   const [newItem, setNewItem] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
 
   function addItem() {
     const t = newItem.trim();
@@ -86,6 +89,28 @@ export function TaskFormFields({
 
   function removeItem(index: number) {
     setChecklist((c) => c.filter((_, i) => i !== index));
+    if (editingIndex === index) setEditingIndex(null);
+  }
+
+  function startEditing(index: number) {
+    setEditingIndex(index);
+    setEditingValue(checklist[index].title);
+  }
+
+  function saveEditing() {
+    if (editingIndex === null) return;
+    const t = editingValue.trim();
+    if (!t) {
+      // Empty title — remove the item instead
+      removeItem(editingIndex);
+      return;
+    }
+    setChecklist((c) => c.map((item, i) => (i === editingIndex ? { ...item, title: t } : item)));
+    setEditingIndex(null);
+  }
+
+  function cancelEditing() {
+    setEditingIndex(null);
   }
 
   return (
@@ -100,7 +125,7 @@ export function TaskFormFields({
           aria-invalid={fieldErrors?.title ? true : undefined}
         />
         {fieldErrors?.title ? (
-          <p className="text-xs text-red-600">{fieldErrors.title}</p>
+          <p className="text-xs text-destructive">{fieldErrors.title}</p>
         ) : null}
       </div>
 
@@ -114,7 +139,7 @@ export function TaskFormFields({
           defaultValue={defaults?.notes}
         />
         {fieldErrors?.notes ? (
-          <p className="text-xs text-red-600">{fieldErrors.notes}</p>
+          <p className="text-xs text-destructive">{fieldErrors.notes}</p>
         ) : null}
       </div>
 
@@ -146,23 +171,10 @@ export function TaskFormFields({
         </div>
 
         <div className="space-y-1.5">
-          <Label>Difficulty</Label>
-          <Select value={difficulty} onValueChange={(v) => setDifficulty(v ?? "easy")}>
-            <SelectTrigger type="button" className="w-full">
-              <SelectValue>
-                {(value: string | null) =>
-                  value ? DIFFICULTY_META[value as keyof typeof DIFFICULTY_META]?.label ?? value : ""
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {DIFFICULTIES.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {DIFFICULTY_META[d].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DifficultySelect
+            value={difficulty}
+            onChange={setDifficulty}
+          />
         </div>
       </div>
 
@@ -246,7 +258,8 @@ export function TaskFormFields({
       <div className="space-y-1.5">
         <Label>Checklist</Label>
         {checklist.length > 0 ? (
-          <ul className="space-y-1">
+          <div className="max-h-64 overflow-y-auto rounded-md">
+            <ul className="space-y-1 pr-1">
             {checklist.map((item, i) => (
               <li
                 key={i}
@@ -258,17 +271,37 @@ export function TaskFormFields({
                   onChange={() => toggleItem(i)}
                   className="size-4 shrink-0 accent-teal-600"
                 />
-                <span
-                  className={`flex-1 truncate text-sm ${
-                    item.completed ? "text-muted-foreground line-through" : ""
-                  }`}
-                >
-                  {item.title}
-                </span>
+                {editingIndex === i ? (
+                  <input
+                    type="text"
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveEditing();
+                      } else if (e.key === "Escape") {
+                        cancelEditing();
+                      }
+                    }}
+                    autoFocus
+                    className="min-w-0 flex-1 bg-transparent text-sm outline-none ring-1 ring-ring rounded px-1"
+                  />
+                ) : (
+                  <span
+                    onDoubleClick={() => startEditing(i)}
+                    className={`min-w-0 flex-1 break-words text-sm cursor-text ${
+                      item.completed ? "text-muted-foreground line-through" : ""
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => removeItem(i)}
-                  className="text-muted-foreground transition-colors hover:text-red-600"
+                  className="text-muted-foreground transition-colors hover:text-destructive"
                   aria-label="Remove sub-task"
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={15} strokeWidth={1.7} />
@@ -276,6 +309,7 @@ export function TaskFormFields({
               </li>
             ))}
           </ul>
+          </div>
         ) : null}
         <div className="flex gap-2">
           <Input

@@ -15,6 +15,34 @@
       "when": 1787022022924,
       "tag": "0001_early_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787094603651,
+      "tag": "0002_broken_puma",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787144224527,
+      "tag": "0003_routines_sort_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1787160422243,
+      "tag": "0004_daily_every_x",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1787272754535,
+      "tag": "0005_woozy_monster_badoon",
+      "breakpoints": true
     }
   ]
 }
