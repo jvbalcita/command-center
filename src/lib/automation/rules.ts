@@ -350,7 +350,7 @@ export const defaultRules: Omit<NewAutomationRule, "createdAt" | "updatedAt">[] 
     description: "Completes the wake-up daily when it's past 6 PM Manila time on a work day",
     enabled: true,
     triggerType: "schedule",
-    triggerConfig: JSON.stringify({ cron: "*/15 * * * *" }),
+    triggerConfig: JSON.stringify({ cron: "0 18 * * 1-5" }),
     condition: JSON.stringify({
       and: [{ type: "day_of_week", days: [1, 2, 3, 4, 5] }, { type: "time_of_day", hour_gte: 18, hour_lt: 23 }],
     } satisfies Condition),

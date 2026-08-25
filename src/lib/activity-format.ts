@@ -92,6 +92,13 @@ export function formatActivitySummary(type: string, rawSummary: string): string 
       return `↩️ Uncompleted daily "${daily}"`;
     }
 
+    case "subtask_toggled": {
+      const { subtask, completed, task } = parsed as { subtask: string; completed: boolean; task: string };
+      const icon = completed ? "☑️" : "☐";
+      const action = completed ? "Completed" : "Unchecked";
+      return `${icon} ${action} subtask "${subtask}" in "${task}"`;
+    }
+
     // These are already human-readable but let's add icons
     case "task_completed":
       return `✅ ${rawSummary}`;
