@@ -27,11 +27,36 @@ describe("parseCommand", () => {
     expect(r.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("ignores unknown project tokens", () => {
-    const r = parseCommand("Do thing @nope #high", projects);
-    expect(r.title).toBe("Do thing @nope");
+  it("strips an unmatched @token and reports the name", () => {
+    const r = parseCommand("Launch Shipped @noway, , and", projects);
+    expect(r.title).toBe("Launch Shipped");
     expect(r.projectId).toBeUndefined();
+    expect(r.projectError).toBe("noway");
+  });
+
+  it("prefix-matches a unique project and treats hyphens like spaces", () => {
+    const r = parseCommand("Ship login @mission-control #high", projects);
+    expect(r.title).toBe("Ship login");
+    expect(r.projectId).toBe(1);
+    expect(r.projectError).toBeUndefined();
     expect(r.priority).toBe("high");
+  });
+
+  it("does not guess when the prefix is ambiguous", () => {
+    const many = [
+      ...projects,
+      { id: 3, name: "Mission Ops" },
+    ];
+    const r = parseCommand("Ship login @mission", many);
+    expect(r.title).toBe("Ship login");
+    expect(r.projectId).toBeUndefined();
+    expect(r.projectError).toBe("mission");
+  });
+
+  it("keeps 'and' inside the real title", () => {
+    const r = parseCommand("Buy milk and eggs @noway", projects);
+    expect(r.title).toBe("Buy milk and eggs");
+    expect(r.projectError).toBe("noway");
   });
 
   it("defaults to plain title", () => {

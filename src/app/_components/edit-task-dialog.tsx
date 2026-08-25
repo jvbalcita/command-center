@@ -9,15 +9,8 @@ import type { Project, Subtask, Task } from "@/lib/db/schema";
 import { toDateInputValue } from "@/lib/task-utils";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  ConfirmDeleteDialog,
+} from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
   DialogContent,
@@ -77,7 +70,7 @@ export function EditTaskDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
           </DialogHeader>
@@ -98,7 +91,7 @@ export function EditTaskDialog({
               }}
               fieldErrors={fieldErrors}
             />
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <div className="flex w-full items-center justify-between gap-2">
                 <Button
@@ -119,23 +112,13 @@ export function EditTaskDialog({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete task?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{task.title}&rdquo; will be permanently deleted. This cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={handleDelete}
+        title="Delete task?"
+        description={`"${task.title}" will be permanently deleted. This cannot be undone.`}
+      />
     </>
   );
 }

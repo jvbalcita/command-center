@@ -6,7 +6,7 @@
 **Owner:** Jack (Artisan Stack IT Solutions)
 **Author/Executor:** Jarvis
 **Created:** 2026-08-18
-**Location:** `~/Documents/Development/Projects/artisan-stack/command-center`
+**Location:** `~/Documents/Development/command-center`
 
 ---
 
@@ -71,7 +71,7 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] Scope, stack, architecture, data model (this doc)
 - [x] Confirm project name — **Mission Control**
 - [x] Author AGENTS.md (best-practices operating manual)
-- [ ] Confirm Habitica credentials availability
+- [x] Confirm Habitica credentials availability
 
 ### Phase 1 — Scaffold & tooling
 - [x] `create-next-app` (installed Next.js 16.3.1) (TS, Tailwind, ESLint, App Router, src-dir, `@/*`)
@@ -115,10 +115,26 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - [x] UI: difficulty selector + checklist editor in task form; progress + difficulty badge on card
 - [x] Habitica mapping helpers (difficulty <-> priority value, subtasks <-> checklist) for Phase 7 pull
 
-### Phase 7 — End-to-end sync (with real creds)
-- [ ] Wire Jack's Habitica creds
-- [ ] Verify: create task → appears in Habitica; complete → scores; stats → dashboard
-- [ ] Sync error handling + retry + `sync_log`
+### Phase 6.75 — Habits & Dailies (full Habitica parity)
+> Two-way sync for Habits (+/- scoring) and Dailies (checkoff + streak + frequency). Combined Habits & Dailies board.
+
+- [x] Schema: `habits` + `dailies` tables (habiticaId, difficulty, counters, frequency, repeatDays, streak, completedToday)
+- [x] Migrations generated + applied (`0002`–`0004`, including `every_x` / monthly fields / sort order)
+- [x] Queries: CRUD for habits + dailies + reorder
+- [x] Client: `scoreHabit(id, direction)`, `completeDaily(id)` (already supported by `scoreTask`)
+- [x] Import: `importHabits()`, `importDailies()`, unified `importAllFromHabitica()` (upsert by habiticaId)
+- [x] Sync actions: `scoreHabitAction`, `completeDailyAction`, uncomplete, edit/delete push
+- [x] UI: one **Habits & Dailies** kanban-style board; click-to-edit; no cross-column moves
+- [x] Frequency: Repeat Every, weekly days, monthly day/week-of-month, yearly helper, greyed not-due cards
+- [x] Scheduled + focus pull (Hermes cron every 5m + pull on board focus)
+- [x] Tests for mapping, daily due-state, scoring rules, quick-add parser
+- [ ] Reminders: sidebar badge (dailies due today), toast on missed, `checkMissedDailies()`
+
+### Phase 7 — End-to-end sync
+- [x] Difficulty-based push + import + stats panel (code complete, verified green)
+- [x] Sync error handling + retry + `sync_log`
+- [x] Wire Jack's Habitica creds
+- [ ] Verify live round-trip: create task → appears in Habitica; complete → scores; stats → dashboard
 
 ### Phase 8 — Docker & docs
 - [ ] Dockerfile + `docker-compose.yml`
@@ -145,15 +161,27 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 
 ## 8. Open Items / Blockers
 
-- [ ] Habitica User ID + API Token (needed at Phase 7)
+- [x] Habitica User ID + API Token (needed for live round-trip verification)
 - [x] Project name — **Mission Control**
 - [ ] License choice (default MIT)
 
 ## 9. Progress Tracking Convention
 
 - Each checkbox above = one task; tick `[x]` when done.
-- Jarvis updates this file + a daily `memory/YYYY-MM-DD.md` note at the end of each working session.
-- Milestones M1–M6 gate progress; anything blocked gets logged under §8.
+- **Progress is tracked in Mission Control** (project tasks + subtasks). PLAN.md stays the architecture/roadmap doc.
+- Jarvis updates PLAN.md checkboxes when a phase item ships, and creates/completes matching Command Center tasks.
+
+---
+
+## Recent work (2026-08-20) — Habits & Dailies board + sync
+
+- [x] Combined Habits + Dailies into one Habitica-style board (reorder in-column only)
+- [x] Click-to-edit dialogs with delete; unified Import
+- [x] Habitica frequency parity (`everyX`, monthly day/week, yearly helper)
+- [x] Not-due dailies look disabled but stay completable
+- [x] Quick add: prefix `@project`, strip unmatched tokens, live preview
+- [x] Pull on board focus + Hermes cron every 5 minutes
+- [x] Score/complete still `POST /tasks/:id/score/:direction` so Habitica awards XP/GP
 
 ---
 
@@ -178,3 +206,9 @@ User / Jarvis  →  Next.js app (UI + API)  →  SQLite (canonical store)
 - Activity feed wrapped in ScrollArea; command bar gained NL parsing (`@project #priority due:tomorrow`) + tests (14 total).
 - Habitica connections settings dialog (save/test/sync) → `settings` table, env fallback.
 - Consolidated agentic-coding best practices into CLAUDE.md.
+
+## Recent work (2026-08-18, Phase 7)
+- Live Habitica sync: difficulty-based push (difficulty → priority, subtasks → checklist), import-from-Habitica (idempotent, skips already-linked), cached stats panel (level/XP/gold/HP/MP).
+- Settings dialog save/test/sync + import/refresh actions (`syncNowAction`, `importFromHabiticaAction`, `refreshHabiticaStatsAction`).
+- Hygiene: added `.env.example`, fixed `.gitignore` negation, stopped passing the Habitica API token to the client.
+- Verified: `typecheck` ✓, `lint` ✓, `test` 14/14 ✓, `build` ✓ (live round-trip still pending Jack's real creds).

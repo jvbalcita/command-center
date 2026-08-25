@@ -26,10 +26,7 @@ export const PRIORITY_META: Record<
 };
 
 const DAY_MS = 86_400_000;
-const MONTHS_SHORT = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+import { MONTHS_SHORT } from "@/lib/constants";
 
 export function formatDueDate(ms: Date | number | null): {
   label: string;
@@ -70,11 +67,6 @@ export const DIFFICULTY_META: Record<
   medium: { label: "Medium", habiticaValue: 1.5, dot: "bg-amber-500" },
   hard: { label: "Hard", habiticaValue: 2, dot: "bg-red-500" },
 };
-
-// Habitica's "priority" field doubles as difficulty (0.1/1/1.5/2).
-export function difficultyToHabitica(d: Difficulty): number {
-  return DIFFICULTY_META[d].habiticaValue;
-}
 
 export function habiticaToDifficulty(v: number): Difficulty {
   if (v === 0.1) return "trivial";

@@ -16,10 +16,10 @@ function formatTime(ms: Date): string {
 }
 
 export async function ActivityFeed() {
-  const items = await listActivity(50);
+  const items = await listActivity(15);
 
   return (
-    <aside className="hidden w-72 shrink-0 border-l border-border lg:flex lg:flex-col">
+    <aside className="hidden h-full min-h-0 w-72 shrink-0 self-stretch border-l border-border lg:flex lg:flex-col">
       <div className="shrink-0 border-b border-border px-4 py-3">
         <h2 className="font-heading text-sm font-semibold">Activity</h2>
       </div>

@@ -66,12 +66,11 @@ export function CommandBar({ projects }: { projects: Project[] }) {
         </kbd>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Quick add</DialogTitle>
             <DialogDescription>
-              Use <code>@project</code>, <code>#priority</code>, and{" "}
-              <code>due:tomorrow</code>.
+              Type a title, then optional tokens. Nothing else is a command.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -85,25 +84,40 @@ export function CommandBar({ projects }: { projects: Project[] }) {
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ship login @Personal #high due:friday"
+              placeholder="Ship login @mission #high due:friday"
+              aria-describedby="quick-add-help"
             />
-            {parsed.title &&
-            (matchedProject || parsed.priority || parsed.dueDate) ? (
-              <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                {parsed.priority ? (
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5">
-                    {parsed.priority}
-                  </span>
-                ) : null}
-                {parsed.dueDate ? (
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5">
-                    {parsed.dueDate}
-                  </span>
-                ) : null}
-                {matchedProject ? (
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5">
-                    {matchedProject.name}
-                  </span>
+            <div id="quick-add-help" className="grid gap-1 font-mono text-[11px] text-muted-foreground">
+              <p><span className="text-foreground">title</span> — required, everything that isn’t a token</p>
+              <p><span className="text-foreground">@project</span> — prefix is enough if unique (@mission)</p>
+              <p><span className="text-foreground">#high</span> — #high #medium #low or #p1 #p2 #p3</p>
+              <p><span className="text-foreground">due:friday</span> — today, tomorrow, weekday, or YYYY-MM-DD</p>
+            </div>
+            {parsed.title || parsed.projectError || parsed.priority || parsed.dueDate || matchedProject ? (
+              <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2">
+                <p className="text-[11px] font-medium text-muted-foreground">Will create</p>
+                <p className="text-sm text-foreground">{parsed.title || "—"}</p>
+                <div className="flex flex-wrap gap-1.5 text-xs">
+                  {parsed.priority ? (
+                    <span className="rounded border border-border bg-background px-1.5 py-0.5">
+                      {parsed.priority}
+                    </span>
+                  ) : null}
+                  {parsed.dueDate ? (
+                    <span className="rounded border border-border bg-background px-1.5 py-0.5">
+                      due {parsed.dueDate}
+                    </span>
+                  ) : null}
+                  {matchedProject ? (
+                    <span className="rounded border border-border bg-background px-1.5 py-0.5">
+                      {matchedProject.name}
+                    </span>
+                  ) : null}
+                </div>
+                {parsed.projectError ? (
+                  <p className="text-xs text-destructive" role="alert">
+                    No project named “{parsed.projectError}”
+                  </p>
                 ) : null}
               </div>
             ) : null}

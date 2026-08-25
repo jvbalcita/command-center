@@ -84,20 +84,114 @@ export const syncLog = sqliteTable("sync_log", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
 });
 
-export const activity = sqliteTable("activity", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  type: text("type").notNull(),
-  entityType: text("entity_type"),
-  entityId: integer("entity_id"),
-  summary: text("summary").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
-});
+export const activity = sqliteTable(
+  "activity",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    type: text("type").notNull(),
+    entityType: text("entity_type"),
+    entityId: integer("entity_id"),
+    summary: text("summary").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
+  },
+  (table) => [
+    index("activity_type_idx").on(table.type),
+    index("activity_created_at_idx").on(table.createdAt),
+  ],
+);
 
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value"), // JSON-encoded
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(now),
 });
+
+// ── Habits (Habitica parity) ─────────────────────────────────
+export const habits = sqliteTable(
+  "habits",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    habiticaId: text("habitica_id").unique(),
+    title: text("title").notNull(),
+    notes: text("notes"),
+    difficulty: text("difficulty", { enum: ["trivial", "easy", "medium", "hard"] })
+      .notNull()
+      .default("easy"),
+    // Habit-specific: up/down counters
+    counterUp: integer("counter_up").notNull().default(0),
+    counterDown: integer("counter_down").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Sync metadata
+    lastSyncedAt: integer("last_synced_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(now),
+  },
+  (table) => [uniqueIndex("habits_habitica_id_idx").on(table.habiticaId)],
+);
+
+// ── Dailies (Habitica parity) ────────────────────────────────
+export const dailies = sqliteTable(
+  "dailies",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    habiticaId: text("habitica_id").unique(),
+    title: text("title").notNull(),
+    notes: text("notes"),
+    difficulty: text("difficulty", { enum: ["trivial", "easy", "medium", "hard"] })
+      .notNull()
+      .default("easy"),
+    // Daily-specific
+    frequency: text("frequency", { enum: ["daily", "weekly", "monthly", "yearly"] })
+      .notNull()
+      .default("daily"),
+    everyX: integer("every_x").notNull().default(1),
+    repeatDays: text("repeat_days"), // JSON array of weekday numbers [0-6] for weekly
+    daysOfMonth: text("days_of_month"), // JSON number[]
+    weeksOfMonth: text("weeks_of_month"), // JSON 0-4 (1st…last)
+    startDate: integer("start_date", { mode: "timestamp_ms" }),
+    streak: integer("streak").notNull().default(0),
+    // Completion tracking
+    completedToday: integer("completed_today", { mode: "boolean" }).notNull().default(false),
+    lastCompletedAt: integer("last_completed_at", { mode: "timestamp_ms" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Sync metadata
+    lastSyncedAt: integer("last_synced_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(now),
+  },
+  (table) => [uniqueIndex("dailies_habitica_id_idx").on(table.habiticaId)],
+);
+
+// ── Automation Rules ───────────────────────────────────────────
+export const automationRules = sqliteTable(
+  "automation_rules",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    description: text("description"),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+    // Trigger configuration
+    triggerType: text("trigger_type", {
+      enum: [
+        "schedule",
+        "task_completed",
+        "task_created",
+        "daily_completed",
+        "habit_scored",
+        "pull_succeeded",
+      ],
+    }).notNull(),
+    triggerConfig: text("trigger_config"), // JSON: cron for schedule, filters for events
+    // Condition (JS expression as string, evaluated in sandbox)
+    condition: text("condition"),
+    // Action (JS function body as string, evaluated in sandbox)
+    action: text("action").notNull(),
+    // Metadata
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(now),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(now),
+  },
+  (table) => [index("automation_rules_trigger_idx").on(table.triggerType)],
+);
 
 // ── Inferred types ───────────────────────────────────────────
 export type Project = typeof projects.$inferSelect;
@@ -106,7 +200,13 @@ export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 export type Subtask = typeof subtasks.$inferSelect;
 export type NewSubtask = typeof subtasks.$inferInsert;
+export type Habit = typeof habits.$inferSelect;
+export type NewHabit = typeof habits.$inferInsert;
+export type Daily = typeof dailies.$inferSelect;
+export type NewDaily = typeof dailies.$inferInsert;
 export type SyncLogRow = typeof syncLog.$inferSelect;
 export type NewSyncLog = typeof syncLog.$inferInsert;
 export type ActivityRow = typeof activity.$inferSelect;
 export type SettingRow = typeof settings.$inferSelect;
+export type AutomationRule = typeof automationRules.$inferSelect;
+export type NewAutomationRule = typeof automationRules.$inferInsert;

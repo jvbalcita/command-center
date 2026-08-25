@@ -19,6 +19,17 @@ export interface HabiticaChecklistItem {
   completed: boolean;
 }
 
+/** Habitica weekly repeat flags. `su` is Sunday. */
+export interface HabiticaRepeat {
+  su?: boolean;
+  m?: boolean;
+  t?: boolean;
+  w?: boolean;
+  th?: boolean;
+  f?: boolean;
+  s?: boolean;
+}
+
 export interface HabiticaTask {
   id: string;
   type: HabiticaTaskType;
@@ -32,6 +43,17 @@ export interface HabiticaTask {
   date?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Daily-specific fields
+  frequency?: "daily" | "weekly" | "monthly" | "yearly";
+  repeat?: HabiticaRepeat;
+  startDate?: string;
+  everyX?: number;
+  daysOfMonth?: number[];
+  weeksOfMonth?: number[];
+  completedAt?: string;
+  streak?: number;
+  counterUp?: number;
+  counterDown?: number;
   [key: string]: unknown;
 }
 
@@ -63,14 +85,19 @@ export interface HabiticaResponse<T> {
 }
 
 export interface CreateTaskInput {
-  text: string;
+  text?: string;
   type?: "habit" | "daily" | "todo";
   notes?: string;
   priority?: HabiticaPriority;
-  date?: string; // ISO date (todos/dailies)
+  date?: string;
   checklist?: HabiticaChecklistItem[];
+  frequency?: "daily" | "weekly" | "monthly" | "yearly";
+  everyX?: number;
+  repeat?: HabiticaRepeat;
+  startDate?: string;
+  daysOfMonth?: number[];
+  weeksOfMonth?: number[];
 }
-
 
 export interface CachedHabiticaStats {
   lvl: number;

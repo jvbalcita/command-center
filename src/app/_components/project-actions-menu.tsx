@@ -15,15 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  ConfirmDeleteDialog,
+} from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
   DialogContent,
@@ -34,8 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const COLORS = ["#0d9488", "#ea580c", "#2563eb", "#7c3aed", "#db2777", "#16a34a"];
+import { PROJECT_COLORS } from "@/lib/constants";
 
 export function ProjectActionsMenu({ project }: { project: Project }) {
   const [editOpen, setEditOpen] = useState(false);
@@ -104,19 +96,19 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
                 aria-invalid={fieldErrors.name ? true : undefined}
               />
               {fieldErrors.name ? (
-                <p className="text-xs text-red-600">{fieldErrors.name}</p>
+                <p className="text-xs text-destructive">{fieldErrors.name}</p>
               ) : null}
             </div>
             <div className="space-y-1.5">
               <Label>Color</Label>
               <div className="flex gap-2">
-                {COLORS.map((c) => (
+                {PROJECT_COLORS.map((c) => (
                   <label key={c} className="relative cursor-pointer">
                     <input
                       type="radio"
                       name="color"
                       value={c}
-                      defaultChecked={c === (project.color ?? COLORS[0])}
+                      defaultChecked={c === (project.color ?? PROJECT_COLORS[0])}
                       className="peer sr-only"
                     />
                     <span
@@ -127,7 +119,7 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
                 ))}
               </div>
             </div>
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving…" : "Save changes"}
@@ -137,23 +129,13 @@ export function ProjectActionsMenu({ project }: { project: Project }) {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{project.name}&rdquo; will be removed. Its tasks move to the
-              inbox.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleArchive}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={handleArchive}
+        title="Delete project?"
+        description={`"${project.name}" will be removed. Its tasks move to the inbox.`}
+      />
     </>
   );
 }
