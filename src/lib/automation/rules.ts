@@ -484,6 +484,19 @@ export const defaultRules: Omit<NewAutomationRule, "createdAt" | "updatedAt">[] 
     } satisfies Action),
   },
   {
+    name: "Score Add Task habit on task creation",
+    description: "Scores the Add Task habit whenever a new task is created in Command Center",
+    enabled: true,
+    triggerType: "task_created",
+    triggerConfig: null,
+    condition: JSON.stringify({ type: "always" } satisfies Condition),
+    action: JSON.stringify({
+      type: "score_habit",
+      habitTitle: "Add task to Habitica :heavy_plus_sign:",
+      direction: "up",
+    } satisfies Action),
+  },
+  {
     name: "Penalize Procrastination habit when tasks are overdue",
     description: "Penalizes procrastination when there are overdue tasks",
     enabled: true,
