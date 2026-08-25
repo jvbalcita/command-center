@@ -1,5 +1,6 @@
 import { listActivity } from "@/lib/db/queries";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatActivitySummary } from "@/lib/activity-format";
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -32,7 +33,7 @@ export async function ActivityFeed() {
           <ul className="flex flex-col gap-0.5 p-2">
             {items.map((a) => (
               <li key={a.id} className="rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/60">
-                <p className="text-xs leading-snug text-foreground">{a.summary}</p>
+                <p className="text-xs leading-snug text-foreground">{formatActivitySummary(a.type, a.summary)}</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
                   {formatTime(a.createdAt)}
                 </p>
