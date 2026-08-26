@@ -7,11 +7,13 @@ import {
   Calendar03Icon,
   CheckListIcon,
   CheckmarkCircle02Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   Flag01Icon,
   Flag02Icon,
   Flag03Icon,
 } from "@hugeicons/core-free-icons";
-import { toggleTaskCompleteAction } from "@/lib/actions";
+import { toggleTaskCompleteAction, toggleSubtaskAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   DIFFICULTY_META,
@@ -40,6 +42,7 @@ export function KanbanCard({
   subtasks: Subtask[];
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [, startTransition] = useTransition();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
@@ -60,6 +63,20 @@ export function KanbanCard({
   function handleClick() {
     if (draggingRef.current) return;
     setEditOpen(true);
+  }
+
+  function handleSubtaskToggle(e: React.MouseEvent, subtaskId: number) {
+    e.stopPropagation();
+    if (draggingRef.current) return;
+    startTransition(() => {
+      void toggleSubtaskAction(subtaskId);
+    });
+  }
+
+  function handleExpandToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (draggingRef.current) return;
+    setExpanded((prev) => !prev);
   }
 
   return (
@@ -133,14 +150,18 @@ export function KanbanCard({
             </span>
           ) : null}
           {taskSubtasks.length > 0 ? (
-            <span
+            <button
+              type="button"
               className={`inline-flex items-center gap-1 ${
                 doneCount === taskSubtasks.length ? "text-emerald-600" : "text-muted-foreground"
               }`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={handleExpandToggle}
             >
+              <HugeiconsIcon icon={expanded ? ChevronDownIcon : ChevronRightIcon} size={12} strokeWidth={2} />
               <HugeiconsIcon icon={CheckListIcon} size={13} strokeWidth={1.8} />
               {doneCount}/{taskSubtasks.length}
-            </span>
+            </button>
           ) : null}
           {project ? (
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -151,6 +172,44 @@ export function KanbanCard({
         </div>
           </div>
         </div>
+
+        {/* Expandable subtask list */}
+        {expanded && taskSubtasks.length > 0 && (
+          <div
+            className="mt-2 max-h-40 overflow-y-auto border-t border-border/50 pt-2"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ul className="space-y-1">
+              {taskSubtasks.map((st) => (
+                <li key={st.id} className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                      st.completed
+                        ? "border-emerald-500 bg-emerald-500 text-white dark:bg-emerald-600"
+                        : "border-muted-foreground/30 bg-background hover:border-muted-foreground/60"
+                    }`}
+                    onClick={(e) => handleSubtaskToggle(e, st.id)}
+                  >
+                    {st.completed && (
+                      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                  <span
+                    className={`min-w-0 flex-1 ${
+                      st.completed ? "text-muted-foreground line-through" : "text-foreground"
+                    }`}
+                  >
+                    {st.title}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       <EditTaskDialog
         task={task}
