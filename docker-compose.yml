@@ -1,0 +1,17 @@
+services:
+  command-center:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=/app/data/mission-control.db
+      # Set API_SECRET for remote API access (generate: openssl rand -hex 32)
+      # - API_SECRET=your-secret-token
+      # Habitica integration (optional — can also configure via UI Settings)
+      # - HABITICA_USER_ID=your-user-id
+      # - HABITICA_API_TOKEN=your-api-token
+    restart: unless-stopped

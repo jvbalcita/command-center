@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listProjects } from "@/lib/db/queries";
 import { getSavedHabiticaSettings } from "@/lib/settings";
 import { AutomationRulesView } from "@/app/_components/automation-rules-view";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listProjects, listTasks, listHabits, listDailies, listSubtasks } from "@/lib/db/queries";
 import { getSavedHabiticaSettings } from "@/lib/settings";
 import type { Task, Habit, Daily } from "@/lib/db/schema";
