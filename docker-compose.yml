@@ -14,4 +14,6 @@ services:
       # Habitica integration (optional — can also configure via UI Settings)
       # - HABITICA_USER_ID=your-user-id
       # - HABITICA_API_TOKEN=your-api-token
+    security_opt:
+      - seccomp:unconfined
     restart: unless-stopped

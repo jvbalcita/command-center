@@ -26,7 +26,7 @@ export async function scoreHabitAction(habitId: number, direction: "up" | "down"
   const response = await client.scoreTask(h.habiticaId, direction);
 
   // Atomic transaction: update counters + sync log + activity log
-  const result = db.transaction((tx) => {
+  const result = db.transaction((tx: any) => {
     const newCounterUp = direction === "up" ? h.counterUp + 1 : h.counterUp;
     const newCounterDown = direction === "down" ? h.counterDown + 1 : h.counterDown;
 
@@ -77,7 +77,7 @@ export async function completeDailyAction(dailyId: number) {
   const response = await client.scoreTask(d.habiticaId);
 
   // Atomic transaction: update daily + sync log + activity log
-  db.transaction((tx) => {
+  db.transaction((tx: any) => {
     tx
       .update(dailies)
       .set({
@@ -121,7 +121,7 @@ export async function uncompleteDailyAction(dailyId: number) {
   if (!d.completedToday) throw new Error("Daily not completed today");
 
   // Atomic transaction: update daily + activity log
-  db.transaction((tx) => {
+  db.transaction((tx: any) => {
     tx
       .update(dailies)
       .set({
@@ -179,7 +179,7 @@ export async function createTaskAction(input: {
     .returning();
 
   // Atomic transaction: insert subtasks + sync log + activity log
-  db.transaction((tx) => {
+  db.transaction((tx: any) => {
     if (input.subtasks && input.subtasks.length > 0) {
       tx.insert(subtasks).values(
         input.subtasks.map((s, i) => ({
@@ -239,7 +239,7 @@ export async function completeTaskAction(taskId: number) {
   }
 
   // Atomic transaction: update task status + activity log
-  db.transaction((tx) => {
+  db.transaction((tx: any) => {
     tx
       .update(tasks)
       .set({

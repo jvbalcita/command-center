@@ -1,63 +1,54 @@
-# ── Stage 1: Install dependencies ──────────────────────────────
-FROM node:20-alpine AS deps
+# ── Stage 1: Install deps + build ──────────────────────────────
+FROM node:20-slim AS builder
 WORKDIR /app
 
-# Install build tools for better-sqlite3 native compilation
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy package files
 COPY package.json package-lock.json* ./
-
-# Install all dependencies (npm install is more forgiving with lockfile versions)
 RUN npm install --legacy-peer-deps
 
-# ── Stage 2: Build ─────────────────────────────────────────────
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-# Install build tools for better-sqlite3
-RUN apk add --no-cache python3 make g++
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy source code
 COPY . .
-
-# Build Next.js (includes drizzle-kit generate if configured)
 RUN npm run build
 
-# ── Stage 3: Production ────────────────────────────────────────
-FROM node:20-alpine AS runner
+# ── Stage 2: Production ────────────────────────────────────────
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install runtime dependencies for better-sqlite3
-RUN apk add --no-cache libc6-compat
+# Copy node_modules from builder (compiled on same Debian base)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy built application
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Copy Next.js build output
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/package.json ./
 
-# Copy drizzle config and schema for runtime
-COPY --from=builder /app/drizzle.config.ts ./
+# Copy public assets
+COPY --from=builder /app/public ./public
+
+# Copy runtime source (schema, db init, utils)
 COPY --from=builder /app/src/lib/db/schema.ts ./src/lib/db/schema.ts
 COPY --from=builder /app/src/lib/db/index.ts ./src/lib/db/index.ts
+COPY --from=builder /app/src/lib/db/queries.ts ./src/lib/db/queries.ts
+COPY --from=builder /app/src/lib/settings.ts ./src/lib/settings.ts
+COPY --from=builder /app/src/lib/validation.ts ./src/lib/validation.ts
+COPY --from=builder /app/src/lib/task-utils.ts ./src/lib/task-utils.ts
+COPY --from=builder /app/src/lib/daily-state.ts ./src/lib/daily-state.ts
+COPY --from=builder /app/src/lib/utils.ts ./src/lib/utils.ts
 
-# Create data directory for SQLite
+# Copy drizzle migrations
+COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/drizzle.config.ts ./
+
 RUN mkdir -p /app/data
 
-# Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start the application
-CMD ["node", "server.js"]
+CMD ["npx", "next", "start", "-H", "0.0.0.0"]

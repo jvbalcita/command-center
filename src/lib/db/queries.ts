@@ -342,10 +342,10 @@ export async function incrementHabitCounter(
 export async function listDailies(): Promise<Daily[]> {
   const rows = await db.select().from(dailies).orderBy(asc(dailies.sortOrder), desc(dailies.createdAt));
   const now = new Date();
-  const staleIds = rows.filter((d) => needsRollover(d, now)).map((d) => d.id);
+  const staleIds = rows.filter((d: any) => needsRollover(d, now)).map((d: any) => d.id);
   const stampIds = rows
-    .filter((d) => d.completedToday && !d.lastCompletedAt && !staleIds.includes(d.id))
-    .map((d) => d.id);
+    .filter((d: any) => d.completedToday && !d.lastCompletedAt && !staleIds.includes(d.id))
+    .map((d: any) => d.id);
   if (staleIds.length > 0) {
     await db
       .update(dailies)
@@ -362,7 +362,7 @@ export async function listDailies(): Promise<Daily[]> {
 
   const stale = new Set(staleIds);
   const stamped = new Set(stampIds);
-  return rows.map((d) => {
+  return rows.map((d: any) => {
     if (stale.has(d.id)) return { ...d, completedToday: false };
     if (stamped.has(d.id)) return { ...d, lastCompletedAt: now };
     return d;
