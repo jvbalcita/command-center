@@ -248,17 +248,25 @@ async function evaluateRule(rule: AutomationRule, ctx: RuleContext): Promise<Rul
 
     const actionResult = await executeAction(actionDef, ctx);
 
-    // Log activity
-    await ctx.db.insert(activity).values({
-      type: "automation_rule",
-      entityType: "rule",
-      entityId: rule.id,
-      summary: JSON.stringify({ rule: rule.name, trigger: ctx.trigger.type, result: actionResult.result }),
-    });
+    // Skip activity logging for no-op results (e.g. "Already completed or not found")
+    const isNoop =
+      typeof actionResult.result === "string" &&
+      (actionResult.result.includes("Already completed") ||
+        actionResult.result.includes("not found"));
+    if (!isNoop) {
+      await ctx.db.insert(activity).values({
+        type: "automation_rule",
+        entityType: "rule",
+        entityId: rule.id,
+        summary: JSON.stringify({ rule: rule.name, trigger: ctx.trigger.type, result: actionResult.result }),
+      });
+    }
 
     return {
       success: true,
-      message: `Rule "${rule.name}" executed`,
+      message: isNoop
+        ? `Rule "${rule.name}" skipped (no-op)`
+        : `Rule "${rule.name}" executed`,
       actions: [actionResult],
     };
   } catch (error) {

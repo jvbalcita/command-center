@@ -58,8 +58,9 @@ describe("isCompletedToday", () => {
 });
 
 describe("mergeDailyPull", () => {
-  it("keeps a local completion from today when Habitica has no timestamp", () => {
+  it("resets local completion when Habitica says not completed (Habitica reset)", () => {
     const now = monday;
+    // Local says completed, remote says not completed → trust remote (Habitica reset)
     expect(
       mergeDailyPull(
         { completedToday: true, lastCompletedAt: monday, streak: 18 },
@@ -67,9 +68,39 @@ describe("mergeDailyPull", () => {
         now,
       ),
     ).toEqual({
+      completedToday: false,
+      lastCompletedAt: null,
+      streak: 17,
+    });
+  });
+
+  it("uses remote completion when both agree", () => {
+    const now = monday;
+    expect(
+      mergeDailyPull(
+        { completedToday: false, lastCompletedAt: null, streak: 0 },
+        { completedToday: true, lastCompletedAt: monday, streak: 5 },
+        now,
+      ),
+    ).toEqual({
       completedToday: true,
       lastCompletedAt: monday,
-      streak: 18,
+      streak: 5,
+    });
+  });
+
+  it("resets stale local completion when Habitica says not completed", () => {
+    // Local was completed yesterday, remote says not completed → reset
+    expect(
+      mergeDailyPull(
+        { completedToday: true, lastCompletedAt: monday, streak: 10 },
+        { completedToday: false, lastCompletedAt: null, streak: 8 },
+        tuesday,
+      ),
+    ).toEqual({
+      completedToday: false,
+      lastCompletedAt: null,
+      streak: 8,
     });
   });
 });

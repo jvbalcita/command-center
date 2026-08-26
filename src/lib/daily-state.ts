@@ -222,23 +222,19 @@ export function mergeDailyPull(
   remote: { completedToday: boolean; lastCompletedAt: Date | null; streak: number },
   now: Date,
 ): { completedToday: boolean; lastCompletedAt: Date | null; streak: number } {
-  if (isCompletedToday(local, now)) {
+  // If remote says not completed, Habitica has reset this daily.
+  // Trust the remote state — the local flag is stale.
+  if (!remote.completedToday) {
     return {
-      completedToday: true,
-      lastCompletedAt: local.lastCompletedAt ?? now,
-      streak: Math.max(local.streak, remote.streak),
-    };
-  }
-  if (remote.completedToday) {
-    return {
-      completedToday: true,
-      lastCompletedAt: remote.lastCompletedAt ?? now,
+      completedToday: false,
+      lastCompletedAt: remote.lastCompletedAt,
       streak: remote.streak,
     };
   }
+  // Remote is completed — use it
   return {
-    completedToday: false,
-    lastCompletedAt: remote.lastCompletedAt,
+    completedToday: true,
+    lastCompletedAt: remote.lastCompletedAt ?? now,
     streak: remote.streak,
   };
 }
