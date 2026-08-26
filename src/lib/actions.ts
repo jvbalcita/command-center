@@ -1,5 +1,6 @@
 "use server";
 
+import { getDb } from "./db";
 import { revalidatePath } from "next/cache";
 import {
   archiveProject as dbArchiveProject,
@@ -102,6 +103,7 @@ async function saveChecklist(taskId: number, items: ChecklistDraft[]): Promise<v
 }
 
 export async function createProjectAction(formData: FormData): Promise<ActionState> {
+  await getDb();
   const parsed = createProjectSchema.safeParse({
     name: formData.get("name"),
     color: formData.get("color") || undefined,
@@ -124,6 +126,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionSta
 }
 
 export async function createTaskAction(formData: FormData): Promise<ActionState> {
+  await getDb();
   const projectIdRaw = String(formData.get("projectId") ?? "");
   const parsed = taskSchema.safeParse({
     title: formData.get("title"),
@@ -160,6 +163,7 @@ export async function updateTaskAction(
   taskId: number,
   formData: FormData,
 ): Promise<ActionState> {
+  await getDb();
   const projectIdRaw = String(formData.get("projectId") ?? "");
   const parsed = taskSchema.safeParse({
     title: formData.get("title"),
@@ -187,6 +191,7 @@ export async function updateTaskAction(
 }
 
 export async function toggleTaskCompleteAction(taskId: number): Promise<void> {
+  await getDb();
   const task = await getTask(taskId);
   if (!task) return;
   if (task.status === "done") {
@@ -211,6 +216,7 @@ export async function toggleTaskCompleteAction(taskId: number): Promise<void> {
 }
 
 export async function moveTaskAction(taskId: number, status: Task["status"]): Promise<void> {
+  await getDb();
   const task = await getTask(taskId);
   if (!task) return;
   await setTaskStatus(taskId, status);
@@ -225,6 +231,7 @@ export async function moveTaskAction(taskId: number, status: Task["status"]): Pr
 }
 
 export async function deleteTaskAction(taskId: number): Promise<void> {
+  await getDb();
   const task = await getTask(taskId);
   await dbDeleteTask(taskId);
   if (task?.habiticaId) {
@@ -243,6 +250,7 @@ export async function deleteTaskAction(taskId: number): Promise<void> {
 
 
 export async function toggleSubtaskAction(subtaskId: number): Promise<ActionState> {
+  await getDb();
   // 1. Find the subtask and toggle its completed field
   const updated = await updateSubtask(subtaskId, {
     completed: (await listSubtasks([subtaskId])).find(s => s.id === subtaskId)?.completed
@@ -296,6 +304,7 @@ export async function updateProjectAction(
   projectId: number,
   formData: FormData,
 ): Promise<ActionState> {
+  await getDb();
   const parsed = createProjectSchema.safeParse({
     name: formData.get("name"),
     color: formData.get("color") || undefined,
@@ -318,6 +327,7 @@ export async function updateProjectAction(
 }
 
 export async function archiveProjectAction(projectId: number): Promise<void> {
+  await getDb();
   const project = await getProject(projectId);
   await dbArchiveProject(projectId);
   await clearProjectFromTasks(projectId);
@@ -336,6 +346,7 @@ export async function archiveProjectAction(projectId: number): Promise<void> {
 export async function saveHabiticaSettingsAction(
   formData: FormData,
 ): Promise<ActionState> {
+  await getDb();
   const userId = String(formData.get("userId") ?? "").trim();
   const apiToken = String(formData.get("apiToken") ?? "").trim();
   if (!userId) {
@@ -358,7 +369,11 @@ export async function saveHabiticaSettingsAction(
 
 export async function testHabiticaConnectionAction(
   formData: FormData,
-): Promise<{ ok: boolean; message: string }> {
+): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  await getDb();
   const userId = String(formData.get("userId") ?? "").trim();
   const apiToken = String(formData.get("apiToken") ?? "").trim();
 
@@ -383,7 +398,11 @@ export async function testHabiticaConnectionAction(
   }
 }
 
-export async function syncNowAction(): Promise<{ ok: boolean; message: string }> {
+export async function syncNowAction(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  await getDb();
   try {
     const result = await syncAllTasks();
     return {
@@ -399,6 +418,7 @@ export async function importFromHabiticaAction(): Promise<{
   ok: boolean;
   message: string;
 }> {
+  await getDb();
   try {
     const result = await importFromHabitica();
     revalidatePath("/");
@@ -419,6 +439,7 @@ export async function refreshHabiticaStatsAction(): Promise<{
   stats?: CachedHabiticaStats;
   error?: string;
 }> {
+  await getDb();
   try {
     const stats = await refreshHabiticaStats();
     revalidatePath("/");
@@ -451,6 +472,7 @@ export async function scoreHabitAction(
   habitId: number,
   direction: "up" | "down",
 ): Promise<void> {
+  await getDb();
   const habit = await getHabit(habitId);
   if (!habit) return;
 
@@ -474,6 +496,7 @@ export async function scoreHabitAction(
 }
 
 export async function completeDailyAction(dailyId: number): Promise<void> {
+  await getDb();
   const daily = await getDaily(dailyId);
   if (!daily) return;
   if (isCompletedToday(daily, new Date())) return;
@@ -498,6 +521,7 @@ export async function completeDailyAction(dailyId: number): Promise<void> {
 }
 
 export async function uncompleteDailyAction(dailyId: number): Promise<void> {
+  await getDb();
   const daily = await getDaily(dailyId);
   if (!daily) return;
   if (!isCompletedToday(daily, new Date())) return;
@@ -532,6 +556,7 @@ export async function importHabitsAction(): Promise<{
   ok: boolean;
   message: string;
 }> {
+  await getDb();
   try {
     const result = await importHabits();
     revalidatePath("/");
@@ -548,6 +573,7 @@ export async function importDailiesAction(): Promise<{
   ok: boolean;
   message: string;
 }> {
+  await getDb();
   try {
     const result = await importDailies();
     revalidatePath("/");
@@ -564,6 +590,7 @@ export async function importRoutinesAction(): Promise<{
   ok: boolean;
   message: string;
 }> {
+  await getDb();
   try {
     const result = await importAllFromHabitica();
     revalidatePath("/");
@@ -582,11 +609,16 @@ export async function importRoutinesAction(): Promise<{
   }
 }
 
-export async function pullHabiticaAction(): Promise<{ ok: boolean; message: string }> {
+export async function pullHabiticaAction(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  await getDb();
   return importRoutinesAction();
 }
 
 export async function createHabitAction(formData: FormData): Promise<ActionState> {
+  await getDb();
   const parsed = habitSchema.safeParse({
     title: formData.get("title"),
     notes: formData.get("notes") || undefined,
@@ -615,6 +647,7 @@ export async function updateHabitAction(
   habitId: number,
   formData: FormData,
 ): Promise<ActionState> {
+  await getDb();
   const parsed = habitSchema.safeParse({
     title: formData.get("title"),
     notes: formData.get("notes") || undefined,
@@ -641,6 +674,7 @@ export async function updateHabitAction(
 }
 
 export async function deleteHabitAction(habitId: number): Promise<void> {
+  await getDb();
   const habit = await getHabit(habitId);
   await dbDeleteHabit(habitId);
   if (habit?.habiticaId) {
@@ -658,6 +692,7 @@ export async function deleteHabitAction(habitId: number): Promise<void> {
 }
 
 export async function createDailyAction(formData: FormData): Promise<ActionState> {
+  await getDb();
   const parsed = parseDailyForm(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error };
@@ -680,6 +715,7 @@ export async function updateDailyAction(
   dailyId: number,
   formData: FormData,
 ): Promise<ActionState> {
+  await getDb();
   const parsed = parseDailyForm(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error };
@@ -698,6 +734,7 @@ export async function updateDailyAction(
 }
 
 export async function deleteDailyAction(dailyId: number): Promise<void> {
+  await getDb();
   const daily = await getDaily(dailyId);
   await dbDeleteDaily(dailyId);
   if (daily?.habiticaId) {
@@ -715,11 +752,13 @@ export async function deleteDailyAction(dailyId: number): Promise<void> {
 }
 
 export async function reorderHabitsAction(ids: number[]): Promise<void> {
+  await getDb();
   await dbReorderHabits(ids);
   revalidatePath("/");
 }
 
 export async function reorderDailiesAction(ids: number[]): Promise<void> {
+  await getDb();
   await dbReorderDailies(ids);
   revalidatePath("/");
 }

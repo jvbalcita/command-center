@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import { getAutomationRule, updateAutomationRule, deleteAutomationRule } from "@/lib/db/queries";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await getDb();
   try {
     const { id } = await params;
     const rule = await getAutomationRule(Number(id));
@@ -22,6 +24,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await getDb();
   try {
     const { id } = await params;
     const body = await request.json();
@@ -64,6 +67,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await getDb();
   try {
     const { id } = await params;
     await deleteAutomationRule(Number(id));

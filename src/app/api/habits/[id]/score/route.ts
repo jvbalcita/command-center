@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import { scoreHabitAction } from "@/lib/actions";
 import { getHabit } from "@/lib/db/queries";
 
@@ -6,6 +7,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  await getDb();
   const { id: rawId } = await params;
   const habitId = Number(rawId);
 

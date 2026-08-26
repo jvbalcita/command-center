@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import { completeDailyAction } from "@/lib/actions";
 import { getDaily } from "@/lib/db/queries";
 
@@ -6,6 +7,7 @@ export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  await getDb();
   const { id: rawId } = await params;
   const dailyId = Number(rawId);
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb, db } from "@/lib/db";
 import { listAutomationRules, createAutomationRule } from "@/lib/db/queries";
-import { db } from "@/lib/db";
 import { automationRules } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
+  await getDb();
   try {
     const rules = await listAutomationRules();
     return NextResponse.json(rules);
@@ -15,6 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  await getDb();
   try {
     const body = await request.json();
     

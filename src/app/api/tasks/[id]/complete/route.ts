@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import {
   getTask,
   completeTask,
@@ -11,6 +12,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  await getDb();
   try {
     const { id } = await params;
     const taskId = Number(id);

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb, db } from "@/lib/db";
 import { tasks, dailies, habits } from "@/lib/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 export async function GET() {
+  await getDb();
   try {
     const [openTasks, completedToday, totalDailies, dailiesCompletedToday, totalHabits, habitStreaks] =
       await Promise.all([

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import { listHabits } from "@/lib/db/queries";
 
 export async function GET() {
+  await getDb();
   try {
     const habits = await listHabits();
     return NextResponse.json({ ok: true, data: habits });

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import { listActivity } from "@/lib/db/queries";
 
 export async function GET(request: NextRequest) {
+  await getDb();
   const { searchParams } = request.nextUrl;
   const limitRaw = searchParams.get("limit");
   const limit = limitRaw ? Number(limitRaw) : 25;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
 import {
   listTasks,
   createTask as dbCreateTask,
@@ -9,6 +10,7 @@ import { taskSchema } from "@/lib/validation";
 import { enqueueTaskSync } from "@/lib/habitica/service";
 
 export async function GET(request: NextRequest) {
+  await getDb();
   try {
     const { searchParams } = new URL(request.url);
 
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  await getDb();
   try {
     const body = await request.json();
 
