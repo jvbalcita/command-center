@@ -31,6 +31,8 @@ import {
   deleteDaily as dbDeleteDaily,
   reorderHabits as dbReorderHabits,
   reorderDailies as dbReorderDailies,
+  listSubtasks,
+  updateSubtask,
 } from "./db/queries";
 import { isCompletedToday } from "./daily-state";
 import { createProjectSchema, habitSchema, dailySchema, taskSchema, type ActionState } from "./validation";
@@ -53,6 +55,7 @@ import {
   uncompleteDailyInHabitica,
   syncAllTasks,
 } from "./habitica/service";
+import { subtasksToChecklist } from "./habitica/mapping";
 import type { Task } from "./db/schema";
 
 const STATUS_LABEL: Record<Task["status"], string> = {
@@ -236,6 +239,56 @@ export async function deleteTaskAction(taskId: number): Promise<void> {
     });
   }
   revalidatePath("/");
+}
+
+
+export async function toggleSubtaskAction(subtaskId: number): Promise<ActionState> {
+  // 1. Find the subtask and toggle its completed field
+  const updated = await updateSubtask(subtaskId, {
+    completed: (await listSubtasks([subtaskId])).find(s => s.id === subtaskId)?.completed
+      ? false   // currently completed → uncomplete
+      : true,   // currently incomplete → complete
+  });
+  if (!updated) {
+    return { ok: false, error: "Subtask not found" };
+  }
+
+  // 2. Look up the parent task
+  const task = await getTask(updated.taskId);
+  if (!task) {
+    return { ok: false, error: "Parent task not found" };
+  }
+
+  // 3. Sync checklist to Habitica if linked
+  if (task.habiticaId) {
+    try {
+      const allSubtasks = await listSubtasks([task.id]);
+      const client = await getHabiticaClient();
+      await client.updateTask(task.habiticaId, {
+        checklist: subtasksToChecklist(allSubtasks),
+      });
+    } catch (err) {
+      return {
+        ok: false,
+        error: `Habitica sync failed: ${err instanceof Error ? err.message : String(err)}`,
+      };
+    }
+  }
+
+  // 4. Log activity
+  await logActivity({
+    type: "subtask_toggled",
+    entityType: "subtask",
+    entityId: subtaskId,
+    summary: JSON.stringify({
+      subtask: updated.title,
+      completed: updated.completed,
+      task: task.title,
+    }),
+  });
+
+  revalidatePath("/");
+  return { ok: true };
 }
 
 
