@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock database layer
 vi.mock("@/lib/db", () => ({
+  getDb: vi.fn(),
   db: {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
