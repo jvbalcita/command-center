@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "Mission Control",
   description:
     "Single source of truth for everything you plan and do — synced with Habitica.",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

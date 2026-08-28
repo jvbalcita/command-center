@@ -269,7 +269,7 @@ export function TaskFormFields({
                   type="checkbox"
                   checked={item.completed}
                   onChange={() => toggleItem(i)}
-                  className="size-4 shrink-0 accent-teal-600"
+                  className="size-4 shrink-0 accent-primary"
                 />
                 {editingIndex === i ? (
                   <input

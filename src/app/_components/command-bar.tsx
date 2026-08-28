@@ -61,7 +61,7 @@ export function CommandBar({ projects }: { projects: Project[] }) {
       >
         <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={1.7} />
         <span>Quick add</span>
-        <kbd className="pointer-events-none ml-1 hidden rounded border border-border bg-muted px-1.5 font-mono text-[10px] lg:inline">
+        <kbd className="pointer-events-none ml-1 hidden rounded border border-border bg-muted px-1.5 font-mono text-[10px] sm:inline">
           ⌘K
         </kbd>
       </Button>

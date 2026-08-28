@@ -40,7 +40,23 @@ export function KanbanColumn({
         ))}
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-10 text-center text-xs text-muted-foreground">
-            Drop tasks here
+            {status === "todo" ? (
+              <>
+                <p className="font-medium text-foreground">All caught up!</p>
+                <p className="mt-1">No tasks in the queue.</p>
+                <p className="mt-0.5">Click + to add your first task.</p>
+              </>
+            ) : status === "in_progress" ? (
+              <>
+                <p className="font-medium text-foreground">Nothing in progress</p>
+                <p className="mt-1">Drag tasks here when you start working.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-foreground">No completed tasks</p>
+                <p className="mt-1">Drag tasks here when done.</p>
+              </>
+            )}
           </div>
         ) : null}
       </div>

@@ -41,18 +41,22 @@ export class HabiticaClient {
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const res = await this.fetchImpl(`${this.baseUrl}${path}`, {
+    const url = `${this.baseUrl}${path}`;
+    console.log(`[HabiticaClient] ${init.method || "GET"} ${url}`);
+    const res = await this.fetchImpl(url, {
       ...init,
       headers: { ...this.headers, ...init.headers },
     });
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
+      console.error(`[HabiticaClient] ERROR ${res.status}: ${body}`);
       throw new HabiticaError(`Habitica ${res.status}: ${body}`, res.status);
     }
 
     const json = (await res.json()) as HabiticaResponse<T>;
     if (!json.success) {
+      console.error(`[HabiticaClient] API error: ${json.message ?? json.error}`);
       throw new HabiticaError(json.message ?? json.error ?? "Habitica request failed");
     }
     return json.data;
