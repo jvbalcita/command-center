@@ -51,7 +51,7 @@ export function NewTaskButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button className="gap-1.5 bg-orange-600 text-white hover:bg-orange-500" />}>
+      <DialogTrigger render={<Button className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" />}>
         <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={1.8} />
         New task
       </DialogTrigger>
