@@ -24,12 +24,46 @@ export interface HabiticaCredentials {
   apiToken: string;
 }
 
+
+/**
+ * Rate limiter for Habitica API — max 30 requests per 60 seconds.
+ * Tracks request timestamps and waits if limit is reached.
+ */
+class HabiticaRateLimiter {
+  private timestamps: number[] = [];
+  private readonly maxRequests = 30;
+  private readonly windowMs = 60_000;
+
+  async wait(): Promise<void> {
+    const now = Date.now();
+    // Remove timestamps older than 60 seconds
+    this.timestamps = this.timestamps.filter(t => now - t < this.windowMs);
+
+    if (this.timestamps.length >= this.maxRequests) {
+      const oldest = this.timestamps[0];
+      const waitMs = this.windowMs - (now - oldest) + 100; // +100ms buffer
+      console.log(`[RateLimiter] Waiting ${waitMs}ms (limit: ${this.maxRequests}/min)`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+
+    this.timestamps.push(Date.now());
+  }
+
+  get remaining(): number {
+    const now = Date.now();
+    const active = this.timestamps.filter(t => now - t < this.windowMs);
+    return Math.max(0, this.maxRequests - active.length);
+  }
+}
+
 export class HabiticaClient {
   constructor(
     private readonly creds: HabiticaCredentials,
     private readonly fetchImpl: typeof fetch = fetch,
     private readonly baseUrl: string = BASE_URL,
   ) {}
+
+  private rateLimiter = new HabiticaRateLimiter();
 
   private get headers(): Record<string, string> {
     return {
@@ -41,12 +75,20 @@ export class HabiticaClient {
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    await this.rateLimiter.wait();
     const url = `${this.baseUrl}${path}`;
-    console.log(`[HabiticaClient] ${init.method || "GET"} ${url}`);
+    console.log(`[HabiticaClient] ${init.method || "GET"} ${url} (${this.rateLimiter.remaining} remaining)`);
     const res = await this.fetchImpl(url, {
       ...init,
       headers: { ...this.headers, ...init.headers },
     });
+
+    if (res.status === 429) {
+      const retryAfter = parseInt(res.headers.get("retry-after") || "60", 10);
+      console.warn(`[RateLimiter] 429 — waiting ${retryAfter}s`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return this.request<T>(path, init);
+    }
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
