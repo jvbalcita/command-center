@@ -40,7 +40,8 @@ export function KanbanColumn({
         ))}
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-10 text-center text-xs text-muted-foreground">
-            Drop tasks here
+            <p className="font-medium text-foreground">All caught up!</p>
+            <p className="mt-1">No tasks in this column yet.</p>
           </div>
         ) : null}
       </div>

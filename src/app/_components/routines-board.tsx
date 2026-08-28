@@ -220,7 +220,7 @@ export function RoutinesBoard({
             kind="habit"
             title="Habits"
             count={habits.length}
-            emptyLabel="No habits yet"
+            emptyLabel="No habits yet — tap + to create your first habit"
             habitIds={habitIds}
             habits={habits}
             onScoreHabit={handleScore}
@@ -230,7 +230,7 @@ export function RoutinesBoard({
             kind="daily"
             title="Dailies"
             count={dailies.length}
-            emptyLabel="No dailies yet"
+            emptyLabel="No dailies yet — tap + to create your first daily"
             dailyIds={dailyIds}
             dailies={dailies}
             onToggleDaily={handleToggleDaily}
