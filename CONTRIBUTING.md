@@ -5,7 +5,7 @@ Thanks for your interest in contributing! Here's how to get started.
 ## Development Setup
 
 ```bash
-git clone https://github.com/your-username/command-center.git
+git clone https://github.com/jvbalcita/command-center.git
 cd command-center
 npm install
 npm run db:push
@@ -50,4 +50,4 @@ Use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md).
 
 ## Questions?
 
-Open a [discussion](https://github.com/your-username/command-center/discussions) for general questions.
+Open a [discussion](https://github.com/jvbalcita/command-center/discussions) for general questions.
