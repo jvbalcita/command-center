@@ -104,7 +104,7 @@ Remote access for distributed agents.
 ### Docker (Recommended)
 
 ```bash
-git clone https://github.com/your-username/command-center.git
+git clone https://github.com/jvbalcita/command-center.git
 cd command-center
 docker compose up -d
 ```
@@ -114,7 +114,7 @@ Open **http://localhost:3000** — that's it.
 ### Manual Setup
 
 ```bash
-git clone https://github.com/your-username/command-center.git
+git clone https://github.com/jvbalcita/command-center.git
 cd command-center
 npm install
 npm run db:push
